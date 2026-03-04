@@ -98,6 +98,12 @@ class RouteCache {
 }
 
 /**
+ * Build a deterministic cache key from origin + destination.
+ * Exported for use in the API route.
+ */
+export const buildCacheKey = RouteCache.buildKey;
+
+/**
  * Singleton cache instance. Survives across requests within the same
  * serverless function invocation.
  */
