@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",
@@ -15,6 +15,7 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.4",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^25.3.3",
