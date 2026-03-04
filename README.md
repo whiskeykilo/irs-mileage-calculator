@@ -92,16 +92,19 @@ Both are in-memory (reset on cold start). For multi-instance deployments, swap t
 
 ### Usage Alerts
 
-The daily API counter fires alerts at **50%**, **80%**, and **100%** usage thresholds. By default these log to `console.warn`/`console.error`. To hook in your own alerting (Slack, PagerDuty, email), set a custom hook:
+The daily API counter fires alerts at **50%**, **80%**, and **100%** usage thresholds. By default these log to `console.warn`/`console.error`. To hook in your own alerting (Discord, email, etc.), set a custom hook:
 
 ```typescript
 import { dailyApiCounter } from "@/lib/rate-limit";
 
 dailyApiCounter.onAlert = (alert) => {
   // alert: { level: "warning"|"critical"|"exhausted", used, cap, percentUsed, date }
-  fetch("https://hooks.slack.com/...", {
+  fetch("https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN", {
     method: "POST",
-    body: JSON.stringify({ text: `API usage ${alert.level}: ${alert.used}/${alert.cap}` }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      content: `⚠️ API usage ${alert.level}: ${alert.used}/${alert.cap} (${alert.percentUsed}%)`,
+    }),
   });
 };
 ```

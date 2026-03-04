@@ -87,7 +87,7 @@ class RateLimiter {
 }
 
 /**
- * Alert hook type. Implement your own (e.g., send to Slack, PagerDuty, email)
+ * Alert hook type. Implement your own (e.g., send to Discord, PagerDuty, email)
  * and register it via `dailyApiCounter.onAlert`.
  */
 export type UsageAlertHook = (alert: {
@@ -100,7 +100,7 @@ export type UsageAlertHook = (alert: {
 
 /**
  * Default alert hook: logs to console.
- * Replace with your own (Slack webhook, email, etc.) in production.
+ * Replace with your own (Discord webhook, email, etc.) in production.
  */
 const defaultAlertHook: UsageAlertHook = (alert) => {
   const prefix = `[API USAGE ${alert.level.toUpperCase()}]`;
