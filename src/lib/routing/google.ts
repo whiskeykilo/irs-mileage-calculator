@@ -67,7 +67,14 @@ export class GoogleRoutingProvider implements RoutingProvider {
       );
     }
 
-    const data: DirectionsResponse = await response.json();
+    const data = (await response.json()) as DirectionsResponse;
+
+    if (!data || typeof data.status !== "string") {
+      throw new RoutingProviderError(
+        "PROVIDER_ERROR",
+        "Unexpected response format from routing API.",
+      );
+    }
 
     switch (data.status) {
       case "OK":

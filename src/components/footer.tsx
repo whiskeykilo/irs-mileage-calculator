@@ -17,7 +17,7 @@ export function Footer() {
           </a>
           .
         </p>
-        <nav className="flex justify-center gap-4">
+        <nav aria-label="Footer navigation" className="flex justify-center gap-4">
           <Link href="/rates" className="hover:text-primary transition-colors">
             Rates
           </Link>

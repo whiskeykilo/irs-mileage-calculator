@@ -14,7 +14,7 @@ export function Header() {
         <Link href="/" className="text-lg font-bold text-primary">
           IRS Mileage Calculator
         </Link>
-        <nav className="flex gap-4 text-sm">
+        <nav aria-label="Main navigation" className="flex gap-4 text-sm">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}

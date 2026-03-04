@@ -18,7 +18,10 @@ export function YearSelector({ value, onChange }: YearSelectorProps) {
       <select
         id="tax-year"
         value={value}
-        onChange={(e) => onChange(parseInt(e.target.value, 10))}
+        onChange={(e) => {
+          const n = parseInt(e.target.value, 10);
+          if (!isNaN(n)) onChange(n);
+        }}
         className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm
           focus:outline-none focus:ring-2 focus:ring-primary-light/40
           focus:border-primary-light transition-shadow"

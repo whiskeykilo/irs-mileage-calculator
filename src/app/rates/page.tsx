@@ -83,16 +83,18 @@ export default function RatesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-surface-alt border-b border-border">
-                  <th className="text-left px-4 py-3 font-semibold">
+                  <th scope="col" className="text-left px-4 py-3 font-semibold">
                     Tax Year
                   </th>
-                  <th className="text-left px-4 py-3 font-semibold">
+                  <th scope="col" className="text-left px-4 py-3 font-semibold">
                     Rate (per mile)
                   </th>
-                  <th className="text-left px-4 py-3 font-semibold">
+                  <th scope="col" className="text-left px-4 py-3 font-semibold">
                     Rate ($)
                   </th>
-                  <th className="text-left px-4 py-3 font-semibold">Notes</th>
+                  <th scope="col" className="text-left px-4 py-3 font-semibold">
+                    Notes
+                  </th>
                 </tr>
               </thead>
               <tbody>

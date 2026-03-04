@@ -3,7 +3,7 @@
 import { useState, useCallback, type FormEvent } from "react";
 import type { CalculateResponse } from "@/lib/types";
 import { getCurrentYear } from "@/lib/irs-rates";
-import { GoogleMapsProvider } from "./google-maps-loader";
+import { GoogleMapsProvider, useGoogleMaps } from "./google-maps-loader";
 import { AddressInput } from "./address-input";
 import { YearSelector } from "./year-selector";
 import { RoundTripToggle } from "./round-trip-toggle";
@@ -13,6 +13,25 @@ type ApiError = {
   error: string;
   code?: string;
 };
+
+function isApiError(data: unknown): data is ApiError {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "error" in data &&
+    typeof (data as ApiError).error === "string"
+  );
+}
+
+function MapsLoadError() {
+  const { error } = useGoogleMaps();
+  if (!error) return null;
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+      Address autocomplete unavailable. You can still type addresses manually.
+    </div>
+  );
+}
 
 export function Calculator() {
   const [origin, setOrigin] = useState("");
@@ -40,10 +59,12 @@ export function Calculator() {
           body: JSON.stringify({ origin, destination, year, roundTrip }),
         });
 
-        const data: CalculateResponse | ApiError = await res.json();
+        const data: unknown = await res.json();
 
         if (!res.ok) {
-          setError((data as ApiError).error ?? "Something went wrong.");
+          setError(
+            isApiError(data) ? data.error : "Something went wrong.",
+          );
           setResult(null);
         } else {
           setResult(data as CalculateResponse);
@@ -64,6 +85,7 @@ export function Calculator() {
   return (
     <GoogleMapsProvider>
       <form onSubmit={handleSubmit} className="space-y-5">
+        <MapsLoadError />
         <AddressInput
           id="origin"
           label="Origin"

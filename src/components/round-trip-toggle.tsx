@@ -20,11 +20,13 @@ export function RoundTripToggle({ checked, onChange }: RoundTripToggleProps) {
           className="sr-only peer"
         />
         <div
+          aria-hidden="true"
           className="w-10 h-5.5 bg-border rounded-full peer-checked:bg-primary
             peer-focus-visible:ring-2 peer-focus-visible:ring-primary-light/40
             transition-colors"
         />
         <div
+          aria-hidden="true"
           className="absolute top-0.5 left-0.5 w-4.5 h-4.5 bg-white rounded-full
             shadow-sm transition-transform peer-checked:translate-x-[18px]"
         />

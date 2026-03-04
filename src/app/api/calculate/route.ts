@@ -6,11 +6,19 @@ import { routeCache, buildCacheKey } from "@/lib/cache";
 import { rateLimiter, dailyApiCounter } from "@/lib/rate-limit";
 
 function getClientIp(req: NextRequest): string {
+  // Prefer x-real-ip (set by Vercel/Nginx to the actual client IP).
+  // Fall back to the rightmost x-forwarded-for entry (closest to the proxy),
+  // which is harder to spoof than the leftmost.
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
-    return forwarded.split(",")[0].trim();
+    const parts = forwarded.split(",").map((s) => s.trim());
+    return parts[parts.length - 1];
   }
-  return req.headers.get("x-real-ip") ?? "unknown";
+
+  return "unknown";
 }
 
 function validateRequest(
