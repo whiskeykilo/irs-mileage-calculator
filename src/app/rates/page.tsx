@@ -18,11 +18,52 @@ export const metadata: Metadata = {
   ],
 };
 
+function RatesJsonLd() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is the IRS standard mileage rate for 2026?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "The IRS standard business mileage rate for 2026 is 72.5 cents per mile ($0.725).",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is the IRS standard mileage rate for 2025?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "The IRS standard business mileage rate for 2025 is 70 cents per mile ($0.700).",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Why did 2022 have two different IRS mileage rates?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Due to rising gas prices in 2022, the IRS issued a mid-year rate increase. The rate was 58.5¢/mile from January through June, and 62.5¢/mile from July through December.",
+        },
+      },
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+}
+
 export default function RatesPage() {
   const rates = getAllRates();
 
   return (
     <>
+      <RatesJsonLd />
       <Header />
       <main className="flex-1">
         <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
