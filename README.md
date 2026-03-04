@@ -90,6 +90,22 @@ Two layers protect against cost overruns:
 
 Both are in-memory (reset on cold start). For multi-instance deployments, swap to Redis-backed rate limiting.
 
+### Usage Alerts
+
+The daily API counter fires alerts at **50%**, **80%**, and **100%** usage thresholds. By default these log to `console.warn`/`console.error`. To hook in your own alerting (Slack, PagerDuty, email), set a custom hook:
+
+```typescript
+import { dailyApiCounter } from "@/lib/rate-limit";
+
+dailyApiCounter.onAlert = (alert) => {
+  // alert: { level: "warning"|"critical"|"exhausted", used, cap, percentUsed, date }
+  fetch("https://hooks.slack.com/...", {
+    method: "POST",
+    body: JSON.stringify({ text: `API usage ${alert.level}: ${alert.used}/${alert.cap}` }),
+  });
+};
+```
+
 ## Deployment
 
 ### Vercel (recommended)

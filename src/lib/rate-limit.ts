@@ -87,12 +87,48 @@ class RateLimiter {
 }
 
 /**
+ * Alert hook type. Implement your own (e.g., send to Slack, PagerDuty, email)
+ * and register it via `dailyApiCounter.onAlert`.
+ */
+export type UsageAlertHook = (alert: {
+  level: "warning" | "critical" | "exhausted";
+  used: number;
+  cap: number;
+  percentUsed: number;
+  date: string;
+}) => void;
+
+/**
+ * Default alert hook: logs to console.
+ * Replace with your own (Slack webhook, email, etc.) in production.
+ */
+const defaultAlertHook: UsageAlertHook = (alert) => {
+  const prefix = `[API USAGE ${alert.level.toUpperCase()}]`;
+  const msg = `${prefix} ${alert.used}/${alert.cap} calls used (${alert.percentUsed}%) on ${alert.date}`;
+  if (alert.level === "exhausted") {
+    console.error(msg);
+  } else {
+    console.warn(msg);
+  }
+};
+
+// Alert thresholds as percentages of the daily cap
+const ALERT_THRESHOLDS = [
+  { percent: 50, level: "warning" as const },
+  { percent: 80, level: "critical" as const },
+  { percent: 100, level: "exhausted" as const },
+];
+
+/**
  * Global daily API call counter.
  * Resets at midnight UTC. Only counts actual upstream API calls (not cache hits).
+ * Fires alert hooks at 50%, 80%, and 100% usage thresholds.
  */
 class DailyApiCounter {
   private count = 0;
   private resetDate = this.todayUtc();
+  private firedAlerts = new Set<number>();
+  private alertHook: UsageAlertHook = defaultAlertHook;
 
   private get cap(): number {
     return getEnv("DAILY_API_CAP", 1000);
@@ -100,6 +136,13 @@ class DailyApiCounter {
 
   private todayUtc(): string {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  /**
+   * Register a custom alert hook. Called when usage crosses thresholds (50%, 80%, 100%).
+   */
+  set onAlert(hook: UsageAlertHook) {
+    this.alertHook = hook;
   }
 
   /**
@@ -111,13 +154,16 @@ class DailyApiCounter {
     if (today !== this.resetDate) {
       this.count = 0;
       this.resetDate = today;
+      this.firedAlerts.clear();
     }
 
     if (this.count >= this.cap) {
+      this.fireAlerts();
       return false;
     }
 
     this.count++;
+    this.fireAlerts();
     return true;
   }
 
@@ -127,6 +173,30 @@ class DailyApiCounter {
       return this.cap;
     }
     return Math.max(0, this.cap - this.count);
+  }
+
+  private fireAlerts(): void {
+    const cap = this.cap;
+    if (cap <= 0) return;
+
+    const percentUsed = Math.round((this.count / cap) * 100);
+
+    for (const threshold of ALERT_THRESHOLDS) {
+      if (percentUsed >= threshold.percent && !this.firedAlerts.has(threshold.percent)) {
+        this.firedAlerts.add(threshold.percent);
+        try {
+          this.alertHook({
+            level: threshold.level,
+            used: this.count,
+            cap,
+            percentUsed,
+            date: this.resetDate,
+          });
+        } catch {
+          // Alert hooks must never take down the request path
+        }
+      }
+    }
   }
 }
 
