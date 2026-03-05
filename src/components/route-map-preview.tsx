@@ -323,8 +323,7 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
   return (
     <div
       ref={containerRef}
-      className="w-full rounded-xl border border-border overflow-hidden bg-surface-alt"
-      style={{ height: 220 }}
+      className="w-full h-44 sm:h-56 rounded-xl border border-border overflow-hidden bg-surface-alt"
       aria-hidden
     />
   );

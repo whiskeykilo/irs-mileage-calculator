@@ -185,10 +185,10 @@ export function Calculator() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <YearSelector value={year} onChange={setYear} />
           </div>
-          <div className="flex items-center h-[42px]">
+          <div className="flex items-center sm:h-[42px]">
             <RoundTripToggle checked={roundTrip} onChange={setRoundTrip} />
           </div>
         </div>
