@@ -8,18 +8,23 @@ import { routeCache, buildCacheKey } from "@/lib/cache";
 import { rateLimiter, dailyApiCounter } from "@/lib/rate-limit";
 
 function getClientIp(req: NextRequest): string {
-  // Prefer x-real-ip (set by Vercel/Nginx to the actual client IP).
-  // Fall back to the rightmost x-forwarded-for entry (closest to the proxy),
-  // which is harder to spoof than the leftmost.
+  // NextRequest.ip is set by Vercel's edge network to the true client IP.
+  // This is the most reliable source on Vercel deployments.
+  if (req.ip) return req.ip;
+
+  // x-real-ip is set by reverse proxies (Nginx, Vercel) to the client IP.
   const realIp = req.headers.get("x-real-ip");
   if (realIp) return realIp.trim();
 
+  // Rightmost x-forwarded-for entry is closest to the proxy, harder to spoof.
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
     const parts = forwarded.split(",").map((s) => s.trim());
     return parts[parts.length - 1];
   }
 
+  // No IP info at all. All headerless requests share one bucket, which is
+  // intentional: we'd rather rate-limit aggressively than not at all.
   return "unknown";
 }
 

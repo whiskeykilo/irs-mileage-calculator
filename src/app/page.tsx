@@ -29,10 +29,13 @@ function JsonLd() {
     ],
   };
 
+  // Escape '<' to prevent </script> injection in inline JSON-LD
+  const safeJson = JSON.stringify(structuredData).replace(/</g, "\\u003c");
+
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      dangerouslySetInnerHTML={{ __html: safeJson }}
     />
   );
 }
