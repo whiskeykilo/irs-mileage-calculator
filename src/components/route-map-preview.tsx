@@ -288,6 +288,7 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
               .createWaypointAdvancedMarkers({ map })
               .then(addWaypointMarkers)
               .catch(() => {
+                if (cancelled) return;
                 addFallbackMarkers(route.legs, map, g, markersRef);
               });
           } else {
