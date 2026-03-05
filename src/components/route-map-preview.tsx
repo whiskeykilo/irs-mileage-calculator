@@ -14,18 +14,66 @@ type MapTypeStyle = {
 };
 
 const DARK_MAP_STYLES: MapTypeStyle[] = [
-  { featureType: "all", elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#1d2c4d" }] },
-  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e1626" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#304a7d" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#98a5be" }] },
-  { featureType: "road", elementType: "labels.text.stroke", stylers: [{ color: "#1d2c4d" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
-  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
-  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
-  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
-  { featureType: "administrative", elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+  {
+    featureType: "all",
+    elementType: "geometry",
+    stylers: [{ color: "#1d2c4d" }],
+  },
+  {
+    featureType: "all",
+    elementType: "labels.text.stroke",
+    stylers: [{ color: "#1d2c4d" }],
+  },
+  {
+    featureType: "all",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#8ec3b9" }],
+  },
+  {
+    featureType: "water",
+    elementType: "geometry",
+    stylers: [{ color: "#0e1626" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{ color: "#304a7d" }],
+  },
+  {
+    featureType: "road",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#98a5be" }],
+  },
+  {
+    featureType: "road",
+    elementType: "labels.text.stroke",
+    stylers: [{ color: "#1d2c4d" }],
+  },
+  {
+    featureType: "landscape",
+    elementType: "geometry",
+    stylers: [{ color: "#1d2c4d" }],
+  },
+  {
+    featureType: "poi",
+    elementType: "geometry",
+    stylers: [{ color: "#1d2c4d" }],
+  },
+  {
+    featureType: "poi",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#8ec3b9" }],
+  },
+  {
+    featureType: "transit",
+    elementType: "geometry",
+    stylers: [{ color: "#1d2c4d" }],
+  },
+  {
+    featureType: "administrative",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#8ec3b9" }],
+  },
 ];
 
 const LIGHT_MAP_STYLES: MapTypeStyle[] = [];
@@ -218,7 +266,7 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
       };
       if (intermediates.length > 0) {
         request.intermediates = intermediates.map((addr) => ({
-          address: addr,
+          location: addr,
         }));
       }
       Route.computeRoutes(request)
