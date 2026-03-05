@@ -87,7 +87,7 @@ export function TripDatePicker({
   }, [open]);
 
   return (
-    <div ref={wrapperRef} className="relative max-w-[9.5rem]">
+    <div ref={wrapperRef} className="relative max-w-[12rem]">
       <label
         htmlFor={id}
         className="block text-sm font-medium text-text mb-1.5"
@@ -109,7 +109,7 @@ export function TripDatePicker({
       </button>
       {open && (
         <div
-          className="trip-date-picker-calendar absolute z-10 mt-1 rounded-lg border border-border bg-surface shadow-lg p-1.5"
+          className="trip-date-picker-calendar absolute bottom-full left-0 z-10 mb-1 rounded-lg border border-border bg-surface shadow-lg p-1.5"
           role="dialog"
           aria-modal="true"
           aria-label="Choose trip date"

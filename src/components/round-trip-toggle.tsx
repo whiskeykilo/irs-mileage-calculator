@@ -9,8 +9,9 @@ export function RoundTripToggle({ checked, onChange }: RoundTripToggleProps) {
   return (
     <label
       htmlFor="round-trip"
-      className="flex items-center gap-2.5 cursor-pointer select-none"
+      className="flex items-center gap-2 cursor-pointer select-none"
     >
+      <span className="text-sm font-medium text-text">Round trip</span>
       <div className="relative">
         <input
           type="checkbox"
@@ -31,7 +32,6 @@ export function RoundTripToggle({ checked, onChange }: RoundTripToggleProps) {
             shadow-sm transition-transform peer-checked:translate-x-[18px]"
         />
       </div>
-      <span className="text-sm font-medium text-text">Round trip</span>
     </label>
   );
 }

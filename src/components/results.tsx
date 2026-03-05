@@ -6,12 +6,14 @@ import type { CalculateResponse } from "@/lib/types";
 import { fetchStaticMapDataUri } from "@/lib/static-map";
 import { Disclaimer } from "./disclaimer";
 import { MileageReceiptPdf } from "./mileage-receipt-pdf";
+import { TripDatePicker } from "./trip-date-picker";
 
 type ResultsProps = {
   data: CalculateResponse;
   stops: string[];
   /** Required for PDF; YYYY-MM-DD. Button disabled when empty. */
   tripDate: string;
+  onTripDateChange: (isoDate: string) => void;
 };
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -104,7 +106,12 @@ function formatPdfGeneratedAt(): string {
   return new Date().toLocaleDateString("en-US", { dateStyle: "medium" });
 }
 
-export function Results({ data, stops, tripDate }: ResultsProps) {
+export function Results({
+  data,
+  stops,
+  tripDate,
+  onTripDateChange,
+}: ResultsProps) {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const distanceLabel = data.roundTrip ? "round trip" : "one way";
@@ -169,33 +176,42 @@ export function Results({ data, stops, tripDate }: ResultsProps) {
           copyValue={data.reimbursement.toFixed(2)}
           detail={`${data.distanceMiles.toFixed(2)} mi × $${data.rate.toFixed(3)}/mi`}
         />
-        <div className="mt-4 pt-4 border-t border-border space-y-2">
+        <div className="mt-4 pt-4 border-t border-border space-y-3">
           {pdfError && (
             <p role="alert" className="text-sm text-red-600 dark:text-red-400">
               {pdfError}
             </p>
           )}
-          <button
-            type="button"
-            onClick={handleDownloadPdf}
-            disabled={pdfLoading || !canDownloadPdf}
-            className="w-full rounded-lg border border-primary bg-surface px-4 py-3 text-sm font-semibold text-primary
-              hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/40
-              disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {pdfLoading ? (
-              <span
-                className="flex items-center justify-center gap-2"
-                role="status"
-                aria-live="polite"
-              >
-                <Spinner />
-                Generating PDF...
-              </span>
-            ) : (
-              "Download PDF receipt"
-            )}
-          </button>
+          <div className="grid grid-cols-[3fr_7fr] gap-3 items-end">
+            <div className="min-w-0 w-full">
+              <TripDatePicker
+                value={tripDate}
+                onChange={onTripDateChange}
+                id="trip-date"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={pdfLoading || !canDownloadPdf}
+              className="min-w-0 rounded-lg border border-primary bg-surface px-4 py-2 text-sm font-semibold text-primary
+                hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/40
+                disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {pdfLoading ? (
+                <span
+                  className="flex items-center justify-center gap-2"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <Spinner />
+                  Generating PDF...
+                </span>
+              ) : (
+                "Download PDF receipt"
+              )}
+            </button>
+          </div>
         </div>
       </div>
       <Disclaimer className="px-1" />

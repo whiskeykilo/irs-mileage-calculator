@@ -73,6 +73,9 @@ export function Calculator() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculateResponse | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const draggingIndexRef = useRef<number | null>(null);
 
   const stopValues = stops.map((s) => s.value);
   const debouncedValues = useDebounce(stopValues, DEBOUNCE_MS);
@@ -175,10 +178,20 @@ export function Calculator() {
   const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
     e.dataTransfer.setData("text/plain", String(index));
     e.dataTransfer.effectAllowed = "move";
+    draggingIndexRef.current = index;
+    setDraggingIndex(index);
+    setDragOverIndex(null);
   }, []);
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+    const from = draggingIndexRef.current;
+    setDragOverIndex(from !== null && from !== index ? index : null);
+  }, []);
+  const handleDragEnd = useCallback(() => {
+    draggingIndexRef.current = null;
+    setDraggingIndex(null);
+    setDragOverIndex(null);
   }, []);
   const handleDrop = useCallback(
     (e: React.DragEvent, dropIndex: number) => {
@@ -188,6 +201,9 @@ export function Calculator() {
       const fromIndex = parseInt(from, 10);
       if (Number.isNaN(fromIndex) || fromIndex === dropIndex) return;
       moveStop(fromIndex, dropIndex);
+      draggingIndexRef.current = null;
+      setDraggingIndex(null);
+      setDragOverIndex(null);
     },
     [moveStop],
   );
@@ -196,25 +212,18 @@ export function Calculator() {
     <GoogleMapsProvider>
       <div className="space-y-4">
         <MapsLoadError />
-        <div className="flex items-stretch gap-4">
-          <div className="w-9 shrink-0" aria-hidden />
-          <div className="flex flex-wrap items-end justify-end gap-3 sm:gap-4 min-w-0 flex-1">
-            <TripDatePicker
-              value={tripDate}
-              onChange={setTripDate}
-              id="trip-date"
-            />
-            <div className="flex items-center pb-[0.4375rem]">
-              <RoundTripToggle checked={roundTrip} onChange={setRoundTrip} />
-            </div>
-          </div>
-        </div>
         <div className="flex flex-col">
           {stops.map((stop, index) => (
             <div
               key={stop.id}
-              className="flex items-stretch gap-4"
-              onDragOver={handleDragOver}
+              className={`flex items-stretch gap-4 rounded-lg transition-[background-color,box-shadow,opacity] duration-200 ${
+                draggingIndex === index
+                  ? "opacity-50"
+                  : dragOverIndex === index
+                    ? "bg-primary/5 ring-2 ring-primary/30 ring-inset"
+                    : ""
+              }`}
+              onDragOver={(e) => handleDragOver(e, index)}
               onDrop={(e) => handleDrop(e, index)}
             >
               {/* Marker column: circle vertically centered on the address input, with connector to next stop */}
@@ -230,7 +239,7 @@ export function Calculator() {
                 </div>
                 {index < stops.length - 1 ? (
                   <div
-                    className="w-0.5 flex-1 -mb-[2.125rem] rounded-full bg-gradient-to-b from-primary/30 via-primary/15 to-primary/30"
+                    className="w-0 flex-1 -mb-[2.125rem] border-l-2 border-dashed border-primary/40"
                     aria-hidden
                   />
                 ) : (
@@ -253,6 +262,14 @@ export function Calculator() {
                     value={stop.value}
                     onChange={(v) => setStop(index, v)}
                     onPlaceSelected={(v) => setStop(index, v)}
+                    headerRight={
+                      index === 0 ? (
+                        <RoundTripToggle
+                          checked={roundTrip}
+                          onChange={setRoundTrip}
+                        />
+                      ) : undefined
+                    }
                   />
                 </div>
                 {stops.length > MIN_STOPS &&
@@ -263,6 +280,7 @@ export function Calculator() {
                         type="button"
                         draggable
                         onDragStart={(e) => handleDragStart(e, index)}
+                        onDragEnd={handleDragEnd}
                         className="rounded-md p-1.5 text-text-muted hover:bg-surface-alt hover:text-text cursor-grab active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-primary-light/40"
                         aria-label={`Reorder ${stopLabel(index)}`}
                         title="Drag to reorder"
@@ -322,7 +340,12 @@ export function Calculator() {
         {result && !error && (
           <div className="animate-results-in space-y-5">
             <RouteMapPreview stops={trimmedStops} />
-            <Results data={result} stops={trimmedStops} tripDate={tripDate} />
+            <Results
+              data={result}
+              stops={trimmedStops}
+              tripDate={tripDate}
+              onTripDateChange={setTripDate}
+            />
           </div>
         )}
       </div>

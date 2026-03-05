@@ -10,6 +10,7 @@ type AddressInputProps = {
   onChange: (value: string) => void;
   onPlaceSelected: (address: string) => void;
   id: string;
+  headerRight?: React.ReactNode;
 };
 
 const inputClassName =
@@ -30,6 +31,7 @@ export function AddressInput({
   onChange,
   onPlaceSelected,
   id,
+  headerRight,
 }: AddressInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -226,12 +228,12 @@ export function AddressInput({
 
   return (
     <div ref={wrapperRef} className="relative">
-      <label
-        htmlFor={id}
-        className="block text-sm font-medium text-text mb-1.5"
-      >
-        {label}
-      </label>
+      <div className="flex items-center justify-between mb-1.5">
+        <label htmlFor={id} className="text-sm font-medium text-text">
+          {label}
+        </label>
+        {headerRight}
+      </div>
       <input
         ref={inputRef}
         id={id}

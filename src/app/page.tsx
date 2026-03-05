@@ -86,7 +86,7 @@ export default function Home() {
             </h1>
             <p className="text-text-muted text-sm sm:text-base leading-relaxed max-w-md mx-auto">
               Enter your route and get the IRS reimbursement amount, then
-              download a PDF mileage receipt for your expense report.
+              download a PDF receipt for your expense report.
             </p>
           </div>
           <Calculator />
