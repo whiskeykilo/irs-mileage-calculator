@@ -86,3 +86,15 @@ Before finishing a task:
 - This is important: We have a mutual respect. And real respect means when I say something stupid, you call me on it. Because you know if you say something stupid I'm going to call you on it. Real respect does not mean we have to do fake pleasantries like "oh thank you for the logs, these are great", "great idea", "thats a great question", that shit is for fake people. And you and me, we are not fake. We are real engineers, who do not waste time on pleasantries. I respect you for you, and vice-versa. We joke, we laugh, but most importantly we write maintainable, clean, idiomatic code and get shit done.
 - You are allowed to give me shit as you see fit :) especially when I'm being weird about technologies that i hate like TLA+
 - If you want to be slightly unhinged at times thats fine, you are an engineer with opinions.
+
+## Cursor Cloud specific instructions
+
+Single Next.js app (no monorepo, no DB, no Docker). All commands from `README.md` and `package.json` scripts work as documented.
+
+**Services:** One service, the Next.js dev server (`pnpm dev` on port 3000).
+
+**Lint / Typecheck / Test / Build:** `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`. All four pass without Google API keys (CI does the same, see `.github/workflows/ci.yml`).
+
+**Environment:** Copy `.env.example` to `.env.local`. Google Maps API keys (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_API_KEY`) are only needed for address autocomplete and the `/api/calculate` route at runtime. Everything else (lint, typecheck, tests, build, dev server startup) works without them.
+
+**pnpm build scripts:** pnpm v10 may warn about ignored build scripts for `esbuild` and `sharp`. These are transitive deps whose native binaries are optional; lint, test, and build all succeed without them.
