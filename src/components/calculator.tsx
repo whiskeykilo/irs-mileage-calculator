@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, type FormEvent } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { CalculateResponse } from "@/lib/types";
 import { getCurrentYear } from "@/lib/irs-rates";
 import { GoogleMapsProvider, useGoogleMaps } from "./google-maps-loader";
@@ -8,6 +8,7 @@ import { AddressInput } from "./address-input";
 import { YearSelector } from "./year-selector";
 import { RoundTripToggle } from "./round-trip-toggle";
 import { Results } from "./results";
+import { RouteMapPreview } from "./route-map-preview";
 
 type ApiError = {
   error: string;
@@ -27,11 +28,13 @@ function MapsLoadError() {
   const { error } = useGoogleMaps();
   if (!error) return null;
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
       Address autocomplete unavailable. You can still type addresses manually.
     </div>
   );
 }
+
+const DEBOUNCE_MS = 400;
 
 export function Calculator() {
   const [origin, setOrigin] = useState("");
@@ -42,47 +45,67 @@ export function Calculator() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculateResponse | null>(null);
 
-  const canSubmit = origin.trim().length > 0 && destination.trim().length > 0;
+  const debouncedOrigin = useDebounce(origin, DEBOUNCE_MS);
+  const debouncedDestination = useDebounce(destination, DEBOUNCE_MS);
 
-  const handleSubmit = useCallback(
-    async (e: FormEvent) => {
-      e.preventDefault();
-      if (!canSubmit || loading) return;
+  const canCalculate =
+    debouncedOrigin.trim().length > 0 && debouncedDestination.trim().length > 0;
 
-      setLoading(true);
+  useEffect(() => {
+    if (!canCalculate) {
+      setResult(null);
       setError(null);
+      return;
+    }
 
-      try {
-        const res = await fetch("/api/calculate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ origin, destination, year, roundTrip }),
-        });
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
 
+    fetch("/api/calculate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        origin: debouncedOrigin.trim(),
+        destination: debouncedDestination.trim(),
+        year,
+        roundTrip,
+      }),
+    })
+      .then(async (res) => {
         const data: unknown = await res.json();
-
-        if (!res.ok) {
-          setError(isApiError(data) ? data.error : "Something went wrong.");
-          setResult(null);
-        } else {
+        return { ok: res.ok, data };
+      })
+      .then(({ ok, data }) => {
+        if (cancelled) return;
+        if (ok && !isApiError(data)) {
           setResult(data as CalculateResponse);
           setError(null);
+        } else {
+          setError(isApiError(data) ? data.error : "Something went wrong.");
+          setResult(null);
         }
-      } catch {
-        setError(
-          "Could not reach the server. Check your internet connection and try again.",
-        );
-        setResult(null);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [origin, destination, year, roundTrip, canSubmit, loading],
-  );
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError(
+            "Could not reach the server. Check your internet connection and try again.",
+          );
+          setResult(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedOrigin, debouncedDestination, year, roundTrip, canCalculate]);
 
   return (
     <GoogleMapsProvider>
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="space-y-5">
         <MapsLoadError />
         <AddressInput
           id="origin"
@@ -110,38 +133,55 @@ export function Calculator() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={!canSubmit || loading}
-          className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white
-            hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-light/40
-            disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <Spinner />
-              Calculating...
-            </span>
-          ) : (
-            "Calculate Mileage"
-          )}
-        </button>
+        {canCalculate && loading && (
+          <p className="text-sm text-text-muted flex items-center gap-2">
+            <Spinner />
+            Calculating...
+          </p>
+        )}
 
         {error && (
           <div
             role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-200"
           >
             {error}
           </div>
         )}
 
         {result && !error && (
-          <Results data={result} origin={origin} destination={destination} />
+          <>
+            <RouteMapPreview
+              origin={debouncedOrigin.trim()}
+              destination={debouncedDestination.trim()}
+            />
+            <Results
+              data={result}
+              origin={debouncedOrigin.trim()}
+              destination={debouncedDestination.trim()}
+            />
+          </>
         )}
-      </form>
+      </div>
     </GoogleMapsProvider>
   );
+}
+
+function useDebounce<T>(value: T, ms: number): T {
+  const [debounced, setDebounced] = useState(value);
+  const prevValue = useRef(value);
+
+  useEffect(() => {
+    if (value === prevValue.current) return;
+    prevValue.current = value;
+    const t = setTimeout(() => {
+      setDebounced(value);
+      prevValue.current = value;
+    }, ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+
+  return debounced;
 }
 
 function Spinner() {

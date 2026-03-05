@@ -34,7 +34,11 @@ function initGoogleMaps(): Promise<void> {
   }
 
   setOptions({ key: apiKey, v: "weekly" });
-  initPromise = importLibrary("places").then(() => undefined);
+  initPromise = Promise.all([
+    importLibrary("places"),
+    importLibrary("maps"),
+    importLibrary("routes"),
+  ]).then(() => undefined);
   return initPromise;
 }
 
@@ -47,13 +51,18 @@ export function GoogleMapsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     initGoogleMaps()
       .then(() => setState({ loaded: true, error: null }))
-      .catch((err) =>
-        setState({
-          loaded: false,
-          error:
-            err instanceof Error ? err.message : "Failed to load Google Maps",
-        }),
-      );
+      .catch((err) => {
+        const raw =
+          err instanceof Error ? err.message : "Failed to load Google Maps";
+        const isBlocked =
+          raw.includes("ApiTargetBlockedMapError") ||
+          raw.includes("blocked") ||
+          raw.includes("referer");
+        const message = isBlocked
+          ? "Maps API blocked. Enable Maps JavaScript API and Places API (New) in Google Cloud, turn on billing, and allow this site in key restrictions."
+          : raw;
+        setState({ loaded: false, error: message });
+      });
   }, []);
 
   return (

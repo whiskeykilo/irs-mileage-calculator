@@ -27,11 +27,11 @@ export function RoundTripToggle({ checked, onChange }: RoundTripToggleProps) {
         />
         <div
           aria-hidden="true"
-          className="absolute top-0.5 left-0.5 w-4.5 h-4.5 bg-white rounded-full
+          className="absolute top-0.5 left-0.5 w-4.5 h-4.5 bg-surface rounded-full
             shadow-sm transition-transform peer-checked:translate-x-[18px]"
         />
       </div>
-      <span className="text-sm font-medium">Round trip</span>
+      <span className="text-sm font-medium text-text">Round trip</span>
     </label>
   );
 }

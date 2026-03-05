@@ -12,7 +12,7 @@ export function YearSelector({ value, onChange }: YearSelectorProps) {
 
   return (
     <div>
-      <label htmlFor="tax-year" className="block text-sm font-medium mb-1.5">
+      <label htmlFor="tax-year" className="block text-sm font-medium text-text mb-1.5">
         Tax Year
       </label>
       <select
@@ -22,7 +22,7 @@ export function YearSelector({ value, onChange }: YearSelectorProps) {
           const n = parseInt(e.target.value, 10);
           if (!isNaN(n)) onChange(n);
         }}
-        className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm
+        className="w-full rounded-lg border border-border bg-surface text-text px-3 py-2.5 text-sm
           focus:outline-none focus:ring-2 focus:ring-primary-light/40
           focus:border-primary-light transition-shadow"
       >

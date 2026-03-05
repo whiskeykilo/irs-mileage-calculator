@@ -159,7 +159,7 @@ export function Results({ data, origin, destination }: ResultsProps) {
             type="button"
             onClick={handleDownloadPdf}
             disabled={pdfLoading}
-            className="w-full rounded-lg border border-primary bg-white px-4 py-3 text-sm font-semibold text-primary
+            className="w-full rounded-lg border border-primary bg-surface px-4 py-3 text-sm font-semibold text-primary
               hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary-light/40
               disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >

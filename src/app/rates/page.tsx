@@ -67,7 +67,7 @@ export default function RatesPage() {
       <Header />
       <main className="flex-1">
         <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text mb-4">
             IRS Standard Mileage Rates by Year
           </h1>
 
@@ -83,16 +83,16 @@ export default function RatesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-surface-alt border-b border-border">
-                  <th scope="col" className="text-left px-4 py-3 font-semibold">
+                  <th scope="col" className="text-left px-4 py-3 font-semibold text-text">
                     Tax Year
                   </th>
-                  <th scope="col" className="text-left px-4 py-3 font-semibold">
+                  <th scope="col" className="text-left px-4 py-3 font-semibold text-text">
                     Rate (per mile)
                   </th>
-                  <th scope="col" className="text-left px-4 py-3 font-semibold">
+                  <th scope="col" className="text-left px-4 py-3 font-semibold text-text">
                     Rate ($)
                   </th>
-                  <th scope="col" className="text-left px-4 py-3 font-semibold">
+                  <th scope="col" className="text-left px-4 py-3 font-semibold text-text">
                     Notes
                   </th>
                 </tr>

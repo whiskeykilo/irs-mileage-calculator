@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { SpeedInsightsWrapper } from "@/components/speed-insights-wrapper";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,16 +39,28 @@ export const metadata: Metadata = {
   },
 };
 
+const themeScript = `
+(function(){
+  var k='theme';
+  var t=localStorage.getItem(k);
+  var d=(t==='system'||!t)?window.matchMedia('(prefers-color-scheme: dark)').matches:(t==='dark');
+  document.documentElement.classList.toggle('dark',d);
+})();
+`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-screen flex flex-col bg-surface-alt">
         {children}
-        <SpeedInsights />
+        <SpeedInsightsWrapper />
       </body>
     </html>
   );

@@ -19,7 +19,7 @@ export function Footer() {
         </p>
         <nav
           aria-label="Footer navigation"
-          className="flex justify-center gap-4"
+          className="flex justify-center gap-4 flex-wrap"
         >
           <Link href="/rates" className="hover:text-primary transition-colors">
             Rates
@@ -33,6 +33,14 @@ export function Footer() {
           >
             Privacy
           </Link>
+          <a
+            href="https://github.com/whiskeykilo/irs-mileage-calculator"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-primary transition-colors"
+          >
+            GitHub
+          </a>
         </nav>
         <p>&copy; {new Date().getFullYear()} IRS Mileage Calculator</p>
       </div>

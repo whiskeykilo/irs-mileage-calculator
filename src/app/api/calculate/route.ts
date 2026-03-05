@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { CalculateRequest, CalculateResponse } from "@/lib/types";
-import { getRateForYear, getAvailableYears } from "@/lib/irs-rates";
+import type { CalculateResponse } from "@/lib/types";
+import { getRateForYear } from "@/lib/irs-rates";
+import { validateCalculateRequest } from "@/lib/calculate-validate";
+import { computeReimbursement } from "@/lib/reimbursement";
 import { getRoutingProvider, RoutingProviderError } from "@/lib/routing";
 import { routeCache, buildCacheKey } from "@/lib/cache";
 import { rateLimiter, dailyApiCounter } from "@/lib/rate-limit";
@@ -21,65 +23,6 @@ function getClientIp(req: NextRequest): string {
   return "unknown";
 }
 
-function validateRequest(
-  body: unknown,
-): { ok: true; data: CalculateRequest } | { ok: false; error: string } {
-  if (!body || typeof body !== "object") {
-    return { ok: false, error: "Request body must be a JSON object." };
-  }
-
-  const { origin, destination, year, roundTrip } = body as Record<
-    string,
-    unknown
-  >;
-
-  if (typeof origin !== "string" || origin.trim().length === 0) {
-    return { ok: false, error: "Origin address is required." };
-  }
-  if (typeof destination !== "string" || destination.trim().length === 0) {
-    return { ok: false, error: "Destination address is required." };
-  }
-  if (origin.trim().length > 500 || destination.trim().length > 500) {
-    return { ok: false, error: "Address too long (max 500 characters)." };
-  }
-
-  const availableYears = getAvailableYears();
-  const parsedYear =
-    typeof year === "number"
-      ? year
-      : typeof year === "string"
-        ? parseInt(year, 10)
-        : availableYears[0];
-
-  if (!availableYears.includes(parsedYear)) {
-    return {
-      ok: false,
-      error: `Invalid year. Available years: ${availableYears.join(", ")}`,
-    };
-  }
-
-  return {
-    ok: true,
-    data: {
-      origin: origin.trim(),
-      destination: destination.trim(),
-      year: parsedYear,
-      roundTrip: roundTrip === true,
-    },
-  };
-}
-
-function computeReimbursement(
-  oneWayMiles: number,
-  ratePerMile: number,
-  roundTrip: boolean,
-): { distanceMiles: number; reimbursement: number } {
-  const distanceMiles = roundTrip ? oneWayMiles * 2 : oneWayMiles;
-  const rounded = Math.round(distanceMiles * 100) / 100;
-  const reimbursement = Math.round(rounded * ratePerMile * 100) / 100;
-  return { distanceMiles: rounded, reimbursement };
-}
-
 export async function POST(req: NextRequest) {
   // 1. Parse and validate
   let body: unknown;
@@ -92,7 +35,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const validation = validateRequest(body);
+  const validation = validateCalculateRequest(body);
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "./theme-toggle";
 
 const NAV_LINKS = [
   { href: "/", label: "Calculator" },
@@ -10,11 +11,14 @@ const NAV_LINKS = [
 export function Header() {
   return (
     <header className="border-b border-border bg-surface">
-      <div className="mx-auto max-w-3xl px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="text-lg font-bold text-primary">
+      <div className="mx-auto max-w-3xl px-4 py-3 flex items-center justify-between gap-6">
+        <Link href="/" className="text-lg font-bold text-primary shrink-0">
           IRS Mileage Calculator
         </Link>
-        <nav aria-label="Main navigation" className="flex gap-4 text-sm">
+        <nav
+          aria-label="Main navigation"
+          className="flex items-center gap-5 text-sm"
+        >
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}
@@ -24,6 +28,7 @@ export function Header() {
               {label}
             </Link>
           ))}
+          <ThemeToggle />
         </nav>
       </div>
     </header>

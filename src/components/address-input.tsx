@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect } from "react";
 import { useGoogleMaps } from "./google-maps-loader";
 
 type AddressInputProps = {
@@ -12,6 +12,17 @@ type AddressInputProps = {
   id: string;
 };
 
+const inputClassName =
+  "w-full rounded-lg border border-border bg-surface text-text px-3 py-2.5 text-sm " +
+  "placeholder:text-text-muted/60 focus:outline-none focus:ring-2 " +
+  "focus:ring-primary-light/40 focus:border-primary-light transition-shadow";
+
+/**
+ * Single controlled input for address. Typing updates React state so the calculator
+ * can run as soon as both fields have text. When Maps is loaded we attach the
+ * legacy Autocomplete to the same input so suggestions appear and selection
+ * fills the formatted address.
+ */
 export function AddressInput({
   label,
   placeholder,
@@ -21,40 +32,56 @@ export function AddressInput({
   id,
 }: AddressInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const { loaded } = useGoogleMaps();
 
-  const handlePlaceChanged = useCallback(() => {
-    const place = autocompleteRef.current?.getPlace();
-    if (place?.formatted_address) {
-      onPlaceSelected(place.formatted_address);
-    } else if (place?.name) {
-      onPlaceSelected(place.name);
-    }
-  }, [onPlaceSelected]);
-
   useEffect(() => {
-    if (!loaded || !inputRef.current || autocompleteRef.current) return;
+    if (!loaded || !inputRef.current || !window.google?.maps?.places) return;
 
-    const autocomplete = new google.maps.places.Autocomplete(
-      inputRef.current,
-      {
-        types: ["geocode", "establishment"],
-        fields: ["formatted_address", "name"],
-      },
+    const Autocomplete = (
+      window.google.maps.places as unknown as {
+        Autocomplete?: new (
+          input: HTMLInputElement,
+          opts?: { types?: string[] },
+        ) => {
+          getPlace: () => {
+            formatted_address?: string;
+            name?: string;
+          };
+          addListener: (event: string, fn: () => void) => void;
+        };
+      }
+    ).Autocomplete;
+
+    if (!Autocomplete) return;
+
+    const autocomplete = new Autocomplete(inputRef.current, {
+      types: ["geocode", "establishment"],
+    });
+
+    const handler = () => {
+      const place = autocomplete.getPlace();
+      const addr = (place?.formatted_address ?? place?.name ?? "").trim() || "";
+      if (addr) onPlaceSelected(addr);
+    };
+
+    const listener = window.google.maps.event.addListener(
+      autocomplete,
+      "place_changed",
+      handler,
     );
 
-    autocomplete.addListener("place_changed", handlePlaceChanged);
-    autocompleteRef.current = autocomplete;
-
     return () => {
-      google.maps.event.clearInstanceListeners(autocomplete);
+      window.google.maps.event.removeListener(listener);
+      window.google.maps.event.clearInstanceListeners(autocomplete);
+      if (inputRef.current) {
+        window.google.maps.event.clearInstanceListeners(inputRef.current);
+      }
     };
-  }, [loaded, handlePlaceChanged]);
+  }, [loaded, onPlaceSelected]);
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium mb-1.5">
+      <label htmlFor={id} className="block text-sm font-medium text-text mb-1.5">
         {label}
       </label>
       <input
@@ -65,9 +92,7 @@ export function AddressInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         autoComplete="off"
-        className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm
-          placeholder:text-text-muted/60 focus:outline-none focus:ring-2
-          focus:ring-primary-light/40 focus:border-primary-light transition-shadow"
+        className={inputClassName}
       />
     </div>
   );

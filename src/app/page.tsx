@@ -45,7 +45,7 @@ export default function Home() {
       <main className="flex-1">
         <div className="mx-auto max-w-xl px-4 py-8 sm:py-12">
           <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text mb-3">
               Calculate Your IRS Mileage Reimbursement
             </h1>
             <p className="text-text-muted text-sm sm:text-base leading-relaxed max-w-md mx-auto">
