@@ -49,9 +49,9 @@ export default function Home() {
               Calculate Your IRS Mileage Reimbursement
             </h1>
             <p className="text-text-muted text-sm sm:text-base leading-relaxed max-w-md mx-auto">
-              Enter an origin and destination to calculate driving distance and
-              reimbursement using the official IRS standard business mileage
-              rate.
+              Add your trip stops (start, end, and any stops in between) to get
+              driving distance and reimbursement using the official IRS standard
+              business mileage rate.
             </p>
           </div>
           <Calculator />

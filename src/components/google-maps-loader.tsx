@@ -34,10 +34,12 @@ function initGoogleMaps(): Promise<void> {
   }
 
   setOptions({ key: apiKey, v: "weekly" });
+  // A CORS error for mapsjs/gen_204 is from Google's script (logging/beacon), not our code; often caused by extensions.
   initPromise = Promise.all([
     importLibrary("places"),
     importLibrary("maps"),
     importLibrary("routes"),
+    importLibrary("marker"),
   ]).then(() => undefined);
   return initPromise;
 }

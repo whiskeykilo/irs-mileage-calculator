@@ -8,7 +8,8 @@ import type { RouteResult, RoutingError } from "@/lib/types";
  */
 export interface RoutingProvider {
   readonly name: string;
-  getRoute(origin: string, destination: string): Promise<RouteResult>;
+  /** Ordered stops: first = origin, last = destination; 2–26 stops. */
+  getRoute(stops: string[]): Promise<RouteResult>;
 }
 
 /**

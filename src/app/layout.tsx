@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: "%s | IRS Mileage Calculator",
   },
   description:
-    "Free IRS mileage calculator. Enter origin and destination to calculate driving distance and mileage reimbursement using official IRS standard business mileage rates.",
+    "Free IRS mileage calculator. Enter your stops (origin, destination, and optional waypoints) to calculate driving distance and mileage reimbursement using official IRS standard business mileage rates.",
   keywords: [
     "IRS mileage calculator",
     "mileage reimbursement calculator",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "IRS Mileage Calculator",
     description:
-      "Calculate driving distance and IRS mileage reimbursement between any two addresses.",
+      "Calculate driving distance and IRS mileage reimbursement for any route with multiple stops.",
     url: "https://irsmileagecalculator.com",
     siteName: "IRS Mileage Calculator",
     type: "website",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "IRS Mileage Calculator",
     description:
-      "Calculate driving distance and IRS mileage reimbursement between any two addresses.",
+      "Calculate driving distance and IRS mileage reimbursement for any route with multiple stops.",
   },
   metadataBase: new URL("https://irsmileagecalculator.com"),
   robots: {

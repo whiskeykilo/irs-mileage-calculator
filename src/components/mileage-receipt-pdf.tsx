@@ -91,19 +91,20 @@ const styles = StyleSheet.create({
 });
 
 export type MileageReceiptPdfProps = {
-  origin: string;
-  destination: string;
+  stops: string[];
   result: CalculateResponse;
   generatedAt: string;
 };
 
 export function MileageReceiptPdf({
-  origin,
-  destination,
+  stops,
   result,
   generatedAt,
 }: MileageReceiptPdfProps) {
   const tripType = result.roundTrip ? "Round trip" : "One way";
+  const [origin, ...rest] = stops;
+  const destination = rest.length > 0 ? rest[rest.length - 1] : origin;
+  const waypoints = rest.slice(0, -1);
 
   return (
     <Document>
@@ -119,6 +120,11 @@ export function MileageReceiptPdf({
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Route</Text>
           <Text style={styles.sectionValue}>From: {origin}</Text>
+          {waypoints.map((addr, i) => (
+            <Text key={i} style={[styles.sectionValue, { marginTop: 6 }]}>
+              Stop {i + 1}: {addr}
+            </Text>
+          ))}
           <Text style={[styles.sectionValue, { marginTop: 6 }]}>
             To: {destination}
           </Text>

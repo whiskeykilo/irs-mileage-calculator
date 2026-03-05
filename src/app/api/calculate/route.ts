@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
-  const { origin, destination, year, roundTrip } = validation.data;
+  const { stops, year, roundTrip } = validation.data;
 
   // 2. Rate limit (per-IP)
   const ip = getClientIp(req);
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Check cache
-  const cacheKey = buildCacheKey(origin, destination);
+  const cacheKey = buildCacheKey(stops);
   const cached = routeCache.get(cacheKey);
 
   if (cached) {
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
   // 6. Call routing provider
   try {
     const provider = getRoutingProvider();
-    const result = await provider.getRoute(origin, destination);
+    const result = await provider.getRoute(stops);
 
     // 7. Cache the route result (distance is provider-agnostic)
     routeCache.set(cacheKey, result);

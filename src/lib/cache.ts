@@ -26,14 +26,14 @@ class RouteCache {
   }
 
   /**
-   * Build a deterministic cache key from origin + destination.
+   * Build a deterministic cache key from ordered stops.
    * Normalizes whitespace and casing so "New York, NY" and "new york,  ny"
    * hit the same entry.
    */
-  static buildKey(origin: string, destination: string): string {
+  static buildKey(stops: string[]): string {
     const normalize = (s: string) =>
       s.toLowerCase().trim().replace(/\s+/g, " ");
-    const raw = `${normalize(origin)}|${normalize(destination)}`;
+    const raw = stops.map(normalize).join("|");
     return createHash("sha256").update(raw).digest("hex");
   }
 
@@ -98,7 +98,7 @@ class RouteCache {
 }
 
 /**
- * Build a deterministic cache key from origin + destination.
+ * Build a deterministic cache key from ordered stops.
  * Exported for use in the API route.
  */
 export const buildCacheKey = RouteCache.buildKey;

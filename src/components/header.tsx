@@ -5,7 +5,6 @@ const NAV_LINKS = [
   { href: "/", label: "Calculator" },
   { href: "/rates", label: "Rates" },
   { href: "/about", label: "About" },
-  { href: "/privacy", label: "Privacy" },
 ] as const;
 
 export function Header() {

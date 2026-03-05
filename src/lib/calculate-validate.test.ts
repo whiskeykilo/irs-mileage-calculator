@@ -5,7 +5,7 @@ import { getAvailableYears } from "./irs-rates";
 describe("validateCalculateRequest", () => {
   const validYear = getAvailableYears()[0];
 
-  it("accepts valid body with origin, destination, year, roundTrip", () => {
+  it("accepts valid body with origin, destination, year, roundTrip (legacy)", () => {
     const result = validateCalculateRequest({
       origin: " 1600 Pennsylvania Ave ",
       destination: " 350 Fifth Ave, NY ",
@@ -14,11 +14,43 @@ describe("validateCalculateRequest", () => {
     });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.data.origin).toBe("1600 Pennsylvania Ave");
-      expect(result.data.destination).toBe("350 Fifth Ave, NY");
+      expect(result.data.stops).toEqual(["1600 Pennsylvania Ave", "350 Fifth Ave, NY"]);
       expect(result.data.year).toBe(validYear);
       expect(result.data.roundTrip).toBe(true);
     }
+  });
+
+  it("accepts valid body with stops array", () => {
+    const result = validateCalculateRequest({
+      stops: ["  Start Here ", " Middle ", " End Here "],
+      year: validYear,
+      roundTrip: false,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.stops).toEqual(["Start Here", "Middle", "End Here"]);
+    }
+  });
+
+  it("rejects stops with fewer than 2 non-empty addresses", () => {
+    const r = validateCalculateRequest({
+      stops: ["Only one"],
+      year: validYear,
+      roundTrip: false,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain("two stops");
+  });
+
+  it("rejects more than 26 stops", () => {
+    const many = Array.from({ length: 27 }, (_, i) => `Address ${i}`);
+    const r = validateCalculateRequest({
+      stops: many,
+      year: validYear,
+      roundTrip: false,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain("26");
   });
 
   it("rejects non-object body", () => {
@@ -56,7 +88,7 @@ describe("validateCalculateRequest", () => {
       roundTrip: false,
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toContain("Destination");
+    if (!r.ok) expect(r.error).toContain("Origin and destination");
   });
 
   it("rejects address longer than 500 chars", () => {

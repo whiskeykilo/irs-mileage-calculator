@@ -23,7 +23,7 @@ You need **two** keys from [Google Cloud Console](https://console.cloud.google.c
 
 | Key                  | Env var                             | APIs to enable                                        | Restriction                                                |
 |----------------------|-------------------------------------|-------------------------------------------------------|------------------------------------------------------------|
-| **Client** (browser) | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`   | Maps JavaScript API, Places API, Places API (New)     | HTTP referrers (e.g. `localhost:3000/*`, your domain)      |
+| **Client** (browser) | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`   | Maps JavaScript API, Places API (New), Routes API       | HTTP referrers (e.g. `localhost:3000/*`, your domain)      |
 | **Server** (secret)  | `GOOGLE_MAPS_API_KEY`               | Directions API only                                   | IP or none for dev. Never expose.                          |
 
 Client key is used for address autocomplete; server key for distance calculations only. See `.env.example` for all variables (rate limits, cache TTL, daily API cap, etc.).

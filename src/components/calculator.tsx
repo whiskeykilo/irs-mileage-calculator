@@ -36,20 +36,42 @@ function MapsLoadError() {
 
 const DEBOUNCE_MS = 400;
 
+const MIN_STOPS = 2;
+const MAX_STOPS = 26;
+
 export function Calculator() {
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
+  const [stops, setStops] = useState<string[]>(["", ""]);
   const [year, setYear] = useState(getCurrentYear());
   const [roundTrip, setRoundTrip] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculateResponse | null>(null);
 
-  const debouncedOrigin = useDebounce(origin, DEBOUNCE_MS);
-  const debouncedDestination = useDebounce(destination, DEBOUNCE_MS);
+  const debouncedStops = useDebounce(stops, DEBOUNCE_MS);
+  const trimmedStops = debouncedStops
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  const canCalculate = trimmedStops.length >= MIN_STOPS;
+  const stopsKey = canCalculate ? trimmedStops.join("\n") : "";
 
-  const canCalculate =
-    debouncedOrigin.trim().length > 0 && debouncedDestination.trim().length > 0;
+  const setStop = (index: number, value: string) => {
+    setStops((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  };
+
+  const addStop = () => {
+    if (stops.length >= MAX_STOPS) return;
+    setStops((prev) => [...prev.slice(0, -1), "", prev[prev.length - 1]]);
+  };
+
+  const removeStop = (index: number) => {
+    if (stops.length <= MIN_STOPS || index <= 0 || index >= stops.length - 1)
+      return;
+    setStops((prev) => prev.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     if (!canCalculate) {
@@ -66,8 +88,7 @@ export function Calculator() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        origin: debouncedOrigin.trim(),
-        destination: debouncedDestination.trim(),
+        stops: trimmedStops,
         year,
         roundTrip,
       }),
@@ -101,28 +122,62 @@ export function Calculator() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedOrigin, debouncedDestination, year, roundTrip, canCalculate]);
+  }, [stopsKey, year, roundTrip, canCalculate]);
+
+  const stopLabel = (index: number) => {
+    if (index === 0) return "Start";
+    if (index === stops.length - 1) return "End";
+    return `Stop ${index}`;
+  };
 
   return (
     <GoogleMapsProvider>
       <div className="space-y-5">
         <MapsLoadError />
-        <AddressInput
-          id="origin"
-          label="Origin"
-          placeholder="e.g. 1600 Pennsylvania Ave, Washington DC"
-          value={origin}
-          onChange={setOrigin}
-          onPlaceSelected={setOrigin}
-        />
-        <AddressInput
-          id="destination"
-          label="Destination"
-          placeholder="e.g. 350 Fifth Ave, New York NY"
-          value={destination}
-          onChange={setDestination}
-          onPlaceSelected={setDestination}
-        />
+        <div className="space-y-4">
+          {stops.map((value, index) => (
+            <div key={index} className="flex gap-2 items-start">
+              <div className="flex-1 min-w-0">
+                <AddressInput
+                  id={`stop-${index}`}
+                  label={stopLabel(index)}
+                  placeholder={
+                    index === 0
+                      ? "e.g. 1600 Pennsylvania Ave, Washington DC"
+                      : index === stops.length - 1
+                        ? "e.g. 350 Fifth Ave, New York NY"
+                        : "Address"
+                  }
+                  value={value}
+                  onChange={(v) => setStop(index, v)}
+                  onPlaceSelected={(v) => setStop(index, v)}
+                />
+              </div>
+              {stops.length > MIN_STOPS &&
+                index > 0 &&
+                index < stops.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeStop(index)}
+                    className="mt-7 px-3 py-2.5 rounded-lg border border-border text-text-muted hover:text-red-600 hover:border-red-300 dark:hover:border-red-700 text-sm shrink-0"
+                    aria-label={`Remove ${stopLabel(index)}`}
+                    title="Remove stop"
+                  >
+                    Remove
+                  </button>
+                )}
+            </div>
+          ))}
+          {stops.length < MAX_STOPS && (
+            <button
+              type="button"
+              onClick={addStop}
+              className="w-full rounded-lg border border-dashed border-border text-text-muted hover:text-text hover:border-primary-light/50 py-2.5 text-sm transition-colors"
+            >
+              + Add stop
+            </button>
+          )}
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
           <div className="flex-1">
@@ -151,15 +206,8 @@ export function Calculator() {
 
         {result && !error && (
           <>
-            <RouteMapPreview
-              origin={debouncedOrigin.trim()}
-              destination={debouncedDestination.trim()}
-            />
-            <Results
-              data={result}
-              origin={debouncedOrigin.trim()}
-              destination={debouncedDestination.trim()}
-            />
+            <RouteMapPreview stops={trimmedStops} />
+            <Results data={result} stops={trimmedStops} />
           </>
         )}
       </div>

@@ -12,19 +12,48 @@ export function validateCalculateRequest(
     return { ok: false, error: "Request body must be a JSON object." };
   }
 
-  const { origin, destination, year, roundTrip } = body as Record<
+  const { origin, destination, stops: stopsRaw, year, roundTrip } = body as Record<
     string,
     unknown
   >;
 
-  if (typeof origin !== "string" || origin.trim().length === 0) {
-    return { ok: false, error: "Origin address is required." };
-  }
-  if (typeof destination !== "string" || destination.trim().length === 0) {
-    return { ok: false, error: "Destination address is required." };
-  }
-  if (origin.trim().length > 500 || destination.trim().length > 500) {
-    return { ok: false, error: "Address too long (max 500 characters)." };
+  let stops: string[];
+  if (Array.isArray(stopsRaw)) {
+    const trimmed = stopsRaw
+      .filter((s): s is string => typeof s === "string")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    if (trimmed.length < 2) {
+      return {
+        ok: false,
+        error: "At least two stops (origin and destination) are required.",
+      };
+    }
+    if (trimmed.some((s) => s.length > 500)) {
+      return { ok: false, error: "Address too long (max 500 characters)." };
+    }
+    if (trimmed.length > 26) {
+      return {
+        ok: false,
+        error: "Maximum 26 stops (origin + up to 24 waypoints + destination).",
+      };
+    }
+    stops = trimmed;
+  } else if (typeof origin === "string" && typeof destination === "string") {
+    const o = origin.trim();
+    const d = destination.trim();
+    if (o.length === 0 || d.length === 0) {
+      return { ok: false, error: "Origin and destination are required." };
+    }
+    if (o.length > 500 || d.length > 500) {
+      return { ok: false, error: "Address too long (max 500 characters)." };
+    }
+    stops = [o, d];
+  } else {
+    return {
+      ok: false,
+      error: "Provide either 'stops' (array of 2+ addresses) or 'origin' and 'destination'.",
+    };
   }
 
   const availableYears = getAvailableYears();
@@ -45,8 +74,7 @@ export function validateCalculateRequest(
   return {
     ok: true,
     data: {
-      origin: origin.trim(),
-      destination: destination.trim(),
+      stops,
       year: parsedYear,
       roundTrip: roundTrip === true,
     },

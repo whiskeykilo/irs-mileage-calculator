@@ -8,8 +8,7 @@ import { MileageReceiptPdf } from "./mileage-receipt-pdf";
 
 type ResultsProps = {
   data: CalculateResponse;
-  origin: string;
-  destination: string;
+  stops: string[];
 };
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -104,7 +103,7 @@ function formatPdfGeneratedAt(): string {
   });
 }
 
-export function Results({ data, origin, destination }: ResultsProps) {
+export function Results({ data, stops }: ResultsProps) {
   const [pdfLoading, setPdfLoading] = useState(false);
   const distanceLabel = data.roundTrip ? "round trip" : "one way";
 
@@ -113,8 +112,7 @@ export function Results({ data, origin, destination }: ResultsProps) {
     try {
       const blob = await pdf(
         <MileageReceiptPdf
-          origin={origin}
-          destination={destination}
+          stops={stops}
           result={data}
           generatedAt={formatPdfGeneratedAt()}
         />,
@@ -128,7 +126,7 @@ export function Results({ data, origin, destination }: ResultsProps) {
     } finally {
       setPdfLoading(false);
     }
-  }, [origin, destination, data]);
+  }, [stops, data]);
 
   return (
     <div className="space-y-4">

@@ -46,7 +46,17 @@ export class GoogleRoutingProvider implements RoutingProvider {
     this.apiKey = key;
   }
 
-  async getRoute(origin: string, destination: string): Promise<RouteResult> {
+  async getRoute(stops: string[]): Promise<RouteResult> {
+    if (stops.length < 2) {
+      throw new RoutingProviderError(
+        "INVALID_ADDRESS",
+        "At least two stops are required.",
+      );
+    }
+    const [origin, ...rest] = stops;
+    const destination = rest.pop() ?? origin;
+    const waypoints = rest;
+
     const params = new URLSearchParams({
       origin,
       destination,
@@ -54,6 +64,9 @@ export class GoogleRoutingProvider implements RoutingProvider {
       mode: "driving",
       units: "imperial",
     });
+    if (waypoints.length > 0) {
+      params.set("waypoints", waypoints.join("|"));
+    }
 
     const response = await fetch(`${DIRECTIONS_API_URL}?${params}`, {
       method: "GET",
@@ -84,8 +97,13 @@ export class GoogleRoutingProvider implements RoutingProvider {
         throw new RoutingProviderError(
           data.status === "NOT_FOUND" ? "INVALID_ADDRESS" : "NO_ROUTE",
           data.status === "NOT_FOUND"
-            ? "One or both addresses could not be found. Check spelling and try again."
+            ? "One or more addresses could not be found. Check spelling and try again."
             : "No driving route found between these addresses.",
+        );
+      case "MAX_WAYPOINTS_EXCEEDED":
+        throw new RoutingProviderError(
+          "INVALID_ADDRESS",
+          "Too many stops. Maximum 25 waypoints (26 stops total) allowed.",
         );
       case "OVER_DAILY_LIMIT":
       case "OVER_QUERY_LIMIT":
@@ -105,23 +123,28 @@ export class GoogleRoutingProvider implements RoutingProvider {
         );
     }
 
-    const leg = data.routes[0]?.legs[0];
-    if (!leg) {
+    const legs = data.routes[0]?.legs ?? [];
+    if (legs.length === 0) {
       throw new RoutingProviderError(
         "PROVIDER_ERROR",
         "Unexpected empty response from routing API.",
       );
     }
 
-    const distanceMeters = leg.distance.value;
+    const distanceMeters = legs.reduce((sum, leg) => sum + leg.distance.value, 0);
+    const durationSeconds = legs.reduce((sum, leg) => sum + leg.duration.value, 0);
     const distanceMiles =
       Math.round((distanceMeters / METERS_PER_MILE) * 100) / 100;
+    const summary =
+      legs.length === 1
+        ? data.routes[0].summary
+        : `${legs.length} legs, ${distanceMiles.toFixed(1)} mi total`;
 
     return {
       distanceMeters,
       distanceMiles,
-      durationSeconds: leg.duration.value,
-      summary: data.routes[0].summary,
+      durationSeconds,
+      summary,
     };
   }
 }

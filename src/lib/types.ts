@@ -1,6 +1,6 @@
+/** Ordered stops: first = origin, last = destination, middle = waypoints. Min length 2. */
 export type CalculateRequest = {
-  origin: string;
-  destination: string;
+  stops: string[];
   year: number;
   roundTrip: boolean;
 };
@@ -24,10 +24,10 @@ export type RouteResult = {
 
 export type RoutingError = {
   code:
-    | "INVALID_ADDRESS"
-    | "NO_ROUTE"
-    | "QUOTA_EXCEEDED"
-    | "AUTH_ERROR"
-    | "PROVIDER_ERROR";
+  | "INVALID_ADDRESS"
+  | "NO_ROUTE"
+  | "QUOTA_EXCEEDED"
+  | "AUTH_ERROR"
+  | "PROVIDER_ERROR";
   message: string;
 };

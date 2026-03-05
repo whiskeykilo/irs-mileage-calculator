@@ -26,11 +26,11 @@ export default function AboutPage() {
                 What It Does
               </h2>
               <p>
-                This tool calculates driving distance between two addresses and
-                estimates the IRS mileage reimbursement amount using the
-                official IRS standard business mileage rate for your selected
-                tax year. Enter an origin and destination, and the calculator
-                returns the distance, applicable rate, and total reimbursement.
+                This tool calculates driving distance along a route (two or more
+                stops) and estimates the IRS mileage reimbursement amount using
+                the official IRS standard business mileage rate for your
+                selected tax year. Enter your stops in order, and the calculator
+                returns the total distance, applicable rate, and reimbursement.
               </p>
             </section>
 
@@ -40,12 +40,12 @@ export default function AboutPage() {
               </h2>
               <ol className="list-decimal list-inside space-y-2">
                 <li>
-                  You enter an origin and destination address (autocomplete
-                  helps with partial addresses).
+                  You enter your trip stops in order (start, end, and any stops
+                  in between). Autocomplete helps with partial addresses.
                 </li>
                 <li>
-                  The app sends both addresses to a routing service to calculate
-                  the driving distance.
+                  The app sends the stops to a routing service to calculate the
+                  total driving distance along the route.
                 </li>
                 <li>
                   The distance is multiplied by the IRS standard business
