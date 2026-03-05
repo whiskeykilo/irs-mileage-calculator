@@ -13,11 +13,8 @@ const SUCCESS_HEADERS = {
 };
 
 function getClientIp(req: NextRequest): string {
-  // NextRequest.ip is set by Vercel's edge network to the true client IP.
-  // This is the most reliable source on Vercel deployments.
-  if (req.ip) return req.ip;
-
-  // x-real-ip is set by reverse proxies (Nginx, Vercel) to the client IP.
+  // x-real-ip is set by Vercel's edge and most reverse proxies (Nginx, etc.)
+  // to the actual client IP. Most reliable header-based source.
   const realIp = req.headers.get("x-real-ip");
   if (realIp) return realIp.trim();
 

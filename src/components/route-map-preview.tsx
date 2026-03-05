@@ -290,7 +290,6 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
       markersRef.current = [];
       mapRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapLibsReady, origin, destination, intermediatesKey]);
 
   // Update map theme in-place without recreating the map or route
