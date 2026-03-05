@@ -14,15 +14,13 @@ export default function PrivacyPage() {
     <>
       <Header />
       <main className="flex-1">
-        <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">
             Privacy Policy
           </h1>
 
           <div className="space-y-6 text-sm sm:text-base leading-relaxed text-text-muted">
-            <p>
-              Last updated: March 5, 2026
-            </p>
+            <p>Last updated: March 5, 2026</p>
 
             <section>
               <h2 className="text-lg font-semibold text-text mb-2">
@@ -39,9 +37,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-text mb-2">
-                Caching
-              </h2>
+              <h2 className="text-lg font-semibold text-text mb-2">Caching</h2>
               <p>
                 To reduce costs and improve performance, we cache route distance
                 results in server memory using a one-way hash of the addresses.
@@ -88,9 +84,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-text mb-2">
-                Cookies
-              </h2>
+              <h2 className="text-lg font-semibold text-text mb-2">Cookies</h2>
               <p>
                 This site does not set any first-party cookies. Third-party
                 services (e.g., Google Maps) may set their own cookies as
@@ -102,15 +96,11 @@ export default function PrivacyPage() {
               <h2 className="text-lg font-semibold text-text mb-2">
                 Analytics
               </h2>
-              <p>
-                We do not currently use any analytics or tracking services.
-              </p>
+              <p>We do not currently use any analytics or tracking services.</p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-text mb-2">
-                Contact
-              </h2>
+              <h2 className="text-lg font-semibold text-text mb-2">Contact</h2>
               <p>
                 If you have questions about this privacy policy, please open an
                 issue on our{" "}

@@ -69,7 +69,7 @@ export default function RatesPage() {
       <RatesJsonLd />
       <Header />
       <main className="flex-1">
-        <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text mb-4">
             IRS Standard Mileage Rates by Year
           </h1>
@@ -77,25 +77,37 @@ export default function RatesPage() {
           <p className="text-text-muted text-sm sm:text-base leading-relaxed mb-8">
             The IRS sets a standard mileage rate each year for business use of a
             personal vehicle. Employers can reimburse employees at this rate
-            tax-free, and self-employed individuals can use it to calculate their
-            deduction. The rate is based on an annual study of the fixed and
-            variable costs of operating a car.
+            tax-free, and self-employed individuals can use it to calculate
+            their deduction. The rate is based on an annual study of the fixed
+            and variable costs of operating a car.
           </p>
 
           <div className="overflow-x-auto rounded-xl border border-border shadow-sm">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-surface-alt border-b border-border">
-                  <th scope="col" className="text-left px-3 sm:px-4 py-3 font-semibold text-text">
+                  <th
+                    scope="col"
+                    className="text-left px-3 sm:px-4 py-3 font-semibold text-text"
+                  >
                     Year
                   </th>
-                  <th scope="col" className="text-left px-3 sm:px-4 py-3 font-semibold text-text">
+                  <th
+                    scope="col"
+                    className="text-left px-3 sm:px-4 py-3 font-semibold text-text"
+                  >
                     Rate
                   </th>
-                  <th scope="col" className="text-left px-3 sm:px-4 py-3 font-semibold text-text">
+                  <th
+                    scope="col"
+                    className="text-left px-3 sm:px-4 py-3 font-semibold text-text"
+                  >
                     $/mile
                   </th>
-                  <th scope="col" className="text-left px-3 sm:px-4 py-3 font-semibold text-text hidden sm:table-cell">
+                  <th
+                    scope="col"
+                    className="text-left px-3 sm:px-4 py-3 font-semibold text-text hidden sm:table-cell"
+                  >
                     Notes
                   </th>
                 </tr>
@@ -107,11 +119,11 @@ export default function RatesPage() {
                   .map((rate, i) => (
                     <tr
                       key={`${rate.year}-${rate.periodStart ?? "full"}`}
-                      className={
-                        i % 2 === 0 ? "bg-surface" : "bg-surface-alt"
-                      }
+                      className={i % 2 === 0 ? "bg-surface" : "bg-surface-alt"}
                     >
-                      <td className="px-3 sm:px-4 py-3 font-medium">{rate.year}</td>
+                      <td className="px-3 sm:px-4 py-3 font-medium">
+                        {rate.year}
+                      </td>
                       <td className="px-3 sm:px-4 py-3">{rate.label}</td>
                       <td className="px-3 sm:px-4 py-3">
                         ${rate.rate.toFixed(3)}

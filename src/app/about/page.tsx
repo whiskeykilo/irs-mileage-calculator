@@ -58,7 +58,7 @@ export default function AboutPage() {
       <AboutJsonLd />
       <Header />
       <main className="flex-1">
-        <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">
             About This Calculator
           </h1>
@@ -71,8 +71,8 @@ export default function AboutPage() {
               <p>
                 This tool calculates driving distance along a route (two or more
                 stops) and estimates the IRS mileage reimbursement amount using
-                the official IRS standard business mileage rate for your
-                selected tax year. Enter your stops in order, and the calculator
+                the official IRS standard business mileage rate for the year of
+                your trip date. Enter your stops in order, and the calculator
                 returns the total distance, applicable rate, reimbursement, and
                 a downloadable PDF receipt for expense reporting.
               </p>
@@ -93,7 +93,7 @@ export default function AboutPage() {
                 </li>
                 <li>
                   The distance is multiplied by the IRS standard business
-                  mileage rate for your selected tax year.
+                  mileage rate for the year of your trip date.
                 </li>
                 <li>
                   The result shows the distance (miles), rate ($/mile), and

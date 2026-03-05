@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import { SpeedInsightsWrapper } from "@/components/speed-insights-wrapper";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://irsmileagecalculator.com";
@@ -28,7 +35,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "IRS Mileage Calculator, Instantly Know What Your Drive Is Worth",
+    title: "IRS Mileage Calculator - Instantly Know What Your Drive Is Worth",
     description:
       "Calculate distance and reimbursement, then download a PDF mileage receipt for expense reporting.",
     url: "/",
@@ -38,7 +45,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "IRS Mileage Calculator, Instantly Know What Your Drive Is Worth",
+    title: "IRS Mileage Calculator - Instantly Know What Your Drive Is Worth",
     description:
       "Calculate IRS mileage reimbursement and export a PDF receipt for expense reports.",
   },
@@ -71,11 +78,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={inter.variable}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-screen flex flex-col bg-surface-alt">
+      <body
+        className={`${inter.className} min-h-screen flex flex-col bg-surface-alt`}
+      >
         {children}
         <SpeedInsightsWrapper />
       </body>

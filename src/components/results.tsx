@@ -3,13 +3,15 @@
 import { useState, useCallback } from "react";
 import { pdf } from "@react-pdf/renderer";
 import type { CalculateResponse } from "@/lib/types";
-import { buildStaticMapUrl, fetchStaticMapDataUri } from "@/lib/static-map";
+import { fetchStaticMapDataUri } from "@/lib/static-map";
 import { Disclaimer } from "./disclaimer";
 import { MileageReceiptPdf } from "./mileage-receipt-pdf";
 
 type ResultsProps = {
   data: CalculateResponse;
   stops: string[];
+  /** Required for PDF; YYYY-MM-DD. Button disabled when empty. */
+  tripDate: string;
 };
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -39,7 +41,8 @@ function CopyButton({ text, label }: { text: string; label: string }) {
     <button
       onClick={handleCopy}
       className="text-xs text-text-muted hover:text-primary transition-colors
-        px-2 py-1 rounded border border-border hover:border-primary-light"
+        px-2 py-1 rounded border border-border hover:border-primary-light
+        focus:outline-none focus:ring-2 focus:ring-primary-light/40 focus:border-primary-light"
       aria-label={`Copy ${label}`}
       title={`Copy ${label}`}
     >
@@ -98,30 +101,30 @@ function Spinner() {
 }
 
 function formatPdfGeneratedAt(): string {
-  return new Date().toLocaleString("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  return new Date().toLocaleDateString("en-US", { dateStyle: "medium" });
 }
 
-export function Results({ data, stops }: ResultsProps) {
+export function Results({ data, stops, tripDate }: ResultsProps) {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const distanceLabel = data.roundTrip ? "round trip" : "one way";
+  const canDownloadPdf = tripDate.trim().length > 0;
 
   const handleDownloadPdf = useCallback(async () => {
+    if (!canDownloadPdf) return;
     setPdfLoading(true);
     setPdfError(null);
     try {
-      const staticMapUrl = buildStaticMapUrl(stops, data.overviewPolyline);
-      const mapImageUri = staticMapUrl
-        ? await fetchStaticMapDataUri(staticMapUrl)
-        : null;
+      const mapImageUri = await fetchStaticMapDataUri(
+        stops,
+        data.overviewPolyline,
+      );
 
       const blob = await pdf(
         <MileageReceiptPdf
           stops={stops}
           result={data}
+          tripDate={tripDate.trim()}
           generatedAt={formatPdfGeneratedAt()}
           mapImageUri={mapImageUri}
         />,
@@ -129,7 +132,7 @@ export function Results({ data, stops }: ResultsProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `mileage-receipt-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.download = `mileage-receipt-${tripDate.trim()}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -142,14 +145,12 @@ export function Results({ data, stops }: ResultsProps) {
     } finally {
       setPdfLoading(false);
     }
-  }, [stops, data]);
+  }, [stops, data, tripDate, canDownloadPdf]);
 
   return (
     <div className="space-y-4">
       <div className="bg-surface rounded-xl border border-border p-5 shadow-sm">
-        <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wide mb-3">
-          Results
-        </h2>
+        <h2 className="text-base font-semibold text-text mb-3">Results</h2>
         <ResultRow
           label="Driving Distance"
           value={`${data.distanceMiles.toFixed(2)} miles`}
@@ -177,13 +178,17 @@ export function Results({ data, stops }: ResultsProps) {
           <button
             type="button"
             onClick={handleDownloadPdf}
-            disabled={pdfLoading}
+            disabled={pdfLoading || !canDownloadPdf}
             className="w-full rounded-lg border border-primary bg-surface px-4 py-3 text-sm font-semibold text-primary
-              hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary-light/40
+              hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/40
               disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {pdfLoading ? (
-              <span className="flex items-center justify-center gap-2">
+              <span
+                className="flex items-center justify-center gap-2"
+                role="status"
+                aria-live="polite"
+              >
                 <Spinner />
                 Generating PDF...
               </span>

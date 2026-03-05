@@ -1,4 +1,5 @@
 import type { RouteResult } from "@/lib/types";
+import { MAX_STOPS } from "@/lib/types";
 import { RoutingProvider, RoutingProviderError } from "./provider";
 
 const METERS_PER_MILE = 1609.344;
@@ -54,6 +55,12 @@ export class GoogleRoutingProvider implements RoutingProvider {
         "At least two stops are required.",
       );
     }
+    if (stops.length > MAX_STOPS) {
+      throw new RoutingProviderError(
+        "INVALID_ADDRESS",
+        `Too many stops. Maximum ${MAX_STOPS} (origin + up to ${MAX_STOPS - 2} waypoints + destination) allowed.`,
+      );
+    }
     const [origin, ...rest] = stops;
     const destination = rest.pop() ?? origin;
     const waypoints = rest;
@@ -104,7 +111,7 @@ export class GoogleRoutingProvider implements RoutingProvider {
       case "MAX_WAYPOINTS_EXCEEDED":
         throw new RoutingProviderError(
           "INVALID_ADDRESS",
-          "Too many stops. Maximum 25 waypoints (26 stops total) allowed.",
+          `Too many stops. Maximum ${MAX_STOPS} stops allowed.`,
         );
       case "OVER_DAILY_LIMIT":
       case "OVER_QUERY_LIMIT":

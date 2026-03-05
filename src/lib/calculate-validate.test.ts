@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { MAX_STOPS } from "@/lib/types";
 import { validateCalculateRequest } from "./calculate-validate";
 import { getAvailableYears } from "./irs-rates";
 
@@ -42,15 +43,15 @@ describe("validateCalculateRequest", () => {
     if (!r.ok) expect(r.error).toContain("two stops");
   });
 
-  it("rejects more than 26 stops", () => {
-    const many = Array.from({ length: 27 }, (_, i) => `Address ${i}`);
+  it("rejects more than MAX_STOPS", () => {
+    const many = Array.from({ length: MAX_STOPS + 1 }, (_, i) => `Address ${i}`);
     const r = validateCalculateRequest({
       stops: many,
       year: validYear,
       roundTrip: false,
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toContain("26");
+    if (!r.ok) expect(r.error).toContain(String(MAX_STOPS));
   });
 
   it("rejects non-object body", () => {

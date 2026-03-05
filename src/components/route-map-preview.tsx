@@ -78,20 +78,43 @@ const DARK_MAP_STYLES: MapTypeStyle[] = [
 
 const LIGHT_MAP_STYLES: MapTypeStyle[] = [];
 
+/** Matches layout theme script and theme-toggle: localStorage + matchMedia. */
+function getIsDark(): boolean {
+  if (typeof document === "undefined") return false;
+  const theme = localStorage.getItem("theme");
+  const resolvedDark =
+    theme === "system" || !theme
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : theme === "dark";
+  return resolvedDark;
+}
+
 function useIsDark(): boolean {
-  const [isDark, setIsDark] = useState(() =>
-    typeof document !== "undefined"
-      ? document.documentElement.classList.contains("dark")
-      : false,
-  );
+  const [isDark, setIsDark] = useState(false);
+
   useEffect(() => {
+    const sync = () => setIsDark(getIsDark());
+
+    sync();
+
     const root = document.documentElement;
-    const check = () => root.classList.contains("dark");
-    setIsDark(check());
-    const obs = new MutationObserver(() => setIsDark(check()));
+    const obs = new MutationObserver(sync);
     obs.observe(root, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    media.addEventListener("change", sync);
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "theme") sync();
+    });
+
+    return () => {
+      obs.disconnect();
+      media.removeEventListener("change", sync);
+      window.removeEventListener("storage", sync);
+    };
   }, []);
+
   return isDark;
 }
 
@@ -163,8 +186,10 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const polylinesRef = useRef<Array<{ setMap: (m: unknown) => void }>>([]);
   const markersRef = useRef<Array<{ setMap: (m: unknown) => void }>>([]);
+  const colorSchemeRef = useRef<{ DARK: string; LIGHT: string } | null>(null);
   const { loaded: placesLoaded } = useGoogleMaps();
   const [mapLibsReady, setMapLibsReady] = useState(false);
+  const [mapGeneration, setMapGeneration] = useState(0);
   const isDark = useIsDark();
 
   const [origin, ...rest] = stops;
@@ -219,7 +244,7 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
     let cancelled = false;
 
     void (async () => {
-      const isDarkNow = document.documentElement.classList.contains("dark");
+      const isDarkNow = getIsDark();
       const baseOptions: google.maps.MapOptions = {
         zoom: 4,
         center: { lat: 39.5, lng: -98.5 },
@@ -239,6 +264,7 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
           core as { ColorScheme: { DARK: string; LIGHT: string } }
         )?.ColorScheme;
         if (ColorScheme) {
+          colorSchemeRef.current = ColorScheme;
           mapOptions = {
             ...baseOptions,
             mapId,
@@ -254,6 +280,7 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
       const map = new g.Map(el, mapOptions);
       if (cancelled) return;
       mapRef.current = map;
+      setMapGeneration((n) => n + 1);
 
       const Route = g.routes?.Route;
       if (!Route) return;
@@ -338,33 +365,20 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
       markersRef.current = [];
       mapRef.current = null;
     };
-  }, [mapLibsReady, origin, destination, intermediatesKey]);
+  }, [mapLibsReady, origin, destination, intermediatesKey, isDark]);
 
-  // Update map theme in-place without recreating the map or route
+  // For non–Cloud maps (no mapId), theme can be updated in place via setOptions(styles).
+  // Cloud maps: colorScheme is init-only per Google's API; we rely on map recreation above.
   useEffect(() => {
+    if (mapGeneration === 0) return;
     const map = mapRef.current;
     if (!map) return;
     const mapId =
       process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim() || undefined;
-
-    if (mapId) {
-      // Cloud-styled maps use colorScheme
-      const g = window.google?.maps;
-      void g?.importLibrary?.("core").then((core) => {
-        const ColorScheme = (
-          core as { ColorScheme?: { DARK: string; LIGHT: string } }
-        )?.ColorScheme;
-        if (ColorScheme) {
-          map.setOptions({
-            colorScheme: isDark ? ColorScheme.DARK : ColorScheme.LIGHT,
-          });
-        }
-      });
-    } else {
-      // JSON-styled maps: swap the styles array
+    if (!mapId) {
       map.setOptions({ styles: isDark ? DARK_MAP_STYLES : LIGHT_MAP_STYLES });
     }
-  }, [isDark]);
+  }, [isDark, mapGeneration]);
 
   if (!placesLoaded) return null;
 

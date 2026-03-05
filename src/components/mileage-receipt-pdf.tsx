@@ -6,9 +6,14 @@ import {
   Text,
   View,
   Image,
+  Link,
   StyleSheet,
 } from "@react-pdf/renderer";
 import type { CalculateResponse } from "@/lib/types";
+
+const IRS_RATE_URL =
+  "https://www.irs.gov/tax-professionals/standard-mileage-rates";
+const SITE_URL = "https://irsmileagecalculator.com";
 
 // Use system fonts that embed without registration (Helvetica is PDF standard)
 const styles = StyleSheet.create({
@@ -46,6 +51,9 @@ const styles = StyleSheet.create({
   sectionValue: {
     fontSize: 12,
     color: "#0f172a",
+  },
+  pointLabel: {
+    fontWeight: "bold",
   },
   row: {
     flexDirection: "row",
@@ -102,25 +110,37 @@ const styles = StyleSheet.create({
     color: "#94a3b8",
     textAlign: "center",
   },
+  link: {
+    color: "#1e40af",
+    textDecoration: "none",
+  },
 });
 
 export type MileageReceiptPdfProps = {
   stops: string[];
   result: CalculateResponse;
+  /** Trip date in YYYY-MM-DD; shown on receipt for expense evidence. */
+  tripDate: string;
   generatedAt: string;
   mapImageUri?: string | null;
 };
 
+function formatTripDate(iso: string): string {
+  const d = new Date(iso + "T12:00:00");
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString("en-US", { dateStyle: "long" });
+}
+
 export function MileageReceiptPdf({
   stops,
   result,
+  tripDate,
   generatedAt,
   mapImageUri,
 }: MileageReceiptPdfProps) {
-  const tripType = result.roundTrip ? "Round trip" : "One way";
-  const [origin, ...rest] = stops;
-  const destination = rest.length > 0 ? rest[rest.length - 1] : origin;
-  const waypoints = rest.slice(0, -1);
+  const routeHeading = result.roundTrip ? "ROUND TRIP ROUTE" : "ONE WAY ROUTE";
+  const WAYPOINT_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
   return (
     <Document>
@@ -128,25 +148,27 @@ export function MileageReceiptPdf({
         <View style={styles.header}>
           <Text style={styles.title}>Mileage Reimbursement Receipt</Text>
           <Text style={styles.subtitle}>
-            IRS standard business mileage rate · {result.year} ·{" "}
-            {result.rateLabel}/mile
+            Trip date: {formatTripDate(tripDate)}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Route</Text>
-          <Text style={styles.sectionValue}>From: {origin}</Text>
-          {waypoints.map((addr, i) => (
-            <Text key={i} style={[styles.sectionValue, { marginTop: 6 }]}>
-              Stop {i + 1}: {addr}
+          <Text style={styles.sectionLabel}>{routeHeading}</Text>
+          {stops.map((addr, i) => (
+            <Text
+              key={i}
+              style={
+                i > 0
+                  ? [styles.sectionValue, { marginTop: 6 }]
+                  : styles.sectionValue
+              }
+            >
+              <Text style={[styles.sectionValue, styles.pointLabel]}>
+                Point {WAYPOINT_LETTERS[i] ?? String(i + 1)}{" "}
+              </Text>
+              {addr}
             </Text>
           ))}
-          <Text style={[styles.sectionValue, { marginTop: 6 }]}>
-            To: {destination}
-          </Text>
-          <Text style={[styles.sectionLabel, { marginTop: 8 }]}>
-            {tripType}
-          </Text>
         </View>
 
         {mapImageUri && (
@@ -165,7 +187,11 @@ export function MileageReceiptPdf({
             </Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>IRS rate ({result.year})</Text>
+            <Text style={styles.rowLabel}>
+              <Link src={IRS_RATE_URL} style={styles.link}>
+                IRS rate ({result.year})
+              </Link>
+            </Text>
             <Text style={styles.rowValue}>
               ${result.rate.toFixed(3)}/mile ({result.rateLabel}/mi)
             </Text>
@@ -185,8 +211,12 @@ export function MileageReceiptPdf({
         </View>
 
         <Text style={styles.footer}>
-          Generated on {generatedAt} · For expense reporting. Not tax or legal
-          advice. Verify with your employer or tax professional.
+          Generated on {generatedAt} at{" "}
+          <Link src={SITE_URL} style={styles.link}>
+            irsmileagecalculator.com
+          </Link>{" "}
+          · For expense reporting. Not tax or legal advice. Verify with your
+          employer or tax professional.
         </Text>
       </Page>
     </Document>

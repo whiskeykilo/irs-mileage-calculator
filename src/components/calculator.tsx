@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { CalculateResponse } from "@/lib/types";
-import { getCurrentYear } from "@/lib/irs-rates";
+import { MAX_STOPS } from "@/lib/types";
+import { getAvailableYears, getCurrentYear } from "@/lib/irs-rates";
 import { GoogleMapsProvider, useGoogleMaps } from "./google-maps-loader";
 import { AddressInput } from "./address-input";
-import { YearSelector } from "./year-selector";
 import { RoundTripToggle } from "./round-trip-toggle";
+import { TripDatePicker } from "./trip-date-picker";
 import { Results } from "./results";
 import { RouteMapPreview } from "./route-map-preview";
 
@@ -35,9 +36,7 @@ function MapsLoadError() {
 }
 
 const DEBOUNCE_MS = 400;
-
 const MIN_STOPS = 2;
-const MAX_STOPS = 26;
 
 type Stop = { id: number; value: string };
 
@@ -46,10 +45,31 @@ function makeStop(value = ""): Stop {
   return { id: nextStopId++, value };
 }
 
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Trip date clamped to years we have IRS rates for (e.g. 2020–current). */
+function initialTripDate(): string {
+  const today = todayIso();
+  const years = getAvailableYears();
+  const minYear = years.at(-1) ?? 2020;
+  const maxYear = years[0];
+  const y = parseInt(today.slice(0, 4), 10);
+  if (y < minYear) return `${minYear}-01-01`;
+  if (y > maxYear) return `${maxYear}-12-31`;
+  return today;
+}
+
 export function Calculator() {
   const [stops, setStops] = useState<Stop[]>(() => [makeStop(), makeStop()]);
-  const [year, setYear] = useState(getCurrentYear());
   const [roundTrip, setRoundTrip] = useState(false);
+  const [tripDate, setTripDate] = useState(initialTripDate);
+  const availableYears = getAvailableYears();
+  const year = (() => {
+    const y = parseInt(tripDate.slice(0, 4), 10);
+    return availableYears.includes(y) ? y : getCurrentYear();
+  })();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculateResponse | null>(null);
@@ -129,72 +149,162 @@ export function Calculator() {
     return () => controller.abort();
   }, [stopsKey, year, roundTrip, canCalculate]);
 
+  const WAYPOINT_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const stopLabel = (index: number) => {
     if (index === 0) return "Start";
     if (index === stops.length - 1) return "End";
     return `Stop ${index}`;
   };
+  const markerLabel = (index: number) =>
+    WAYPOINT_LETTERS[index] ?? String(index + 1);
+
+  const moveStop = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      if (fromIndex === toIndex || toIndex < 0 || toIndex >= stops.length)
+        return;
+      setStops((prev) => {
+        const next = [...prev];
+        const [removed] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, removed);
+        return next;
+      });
+    },
+    [stops.length],
+  );
+
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData("text/plain", String(index));
+    e.dataTransfer.effectAllowed = "move";
+  }, []);
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent, dropIndex: number) => {
+      e.preventDefault();
+      const from = e.dataTransfer.getData("text/plain");
+      if (from === "") return;
+      const fromIndex = parseInt(from, 10);
+      if (Number.isNaN(fromIndex) || fromIndex === dropIndex) return;
+      moveStop(fromIndex, dropIndex);
+    },
+    [moveStop],
+  );
 
   return (
     <GoogleMapsProvider>
-      <div className="space-y-5">
+      <div className="space-y-4">
         <MapsLoadError />
-        <div className="space-y-4">
+        <div className="flex items-stretch gap-4">
+          <div className="w-9 shrink-0" aria-hidden />
+          <div className="flex flex-wrap items-end justify-end gap-3 sm:gap-4 min-w-0 flex-1">
+            <TripDatePicker
+              value={tripDate}
+              onChange={setTripDate}
+              id="trip-date"
+            />
+            <div className="flex items-center pb-[0.4375rem]">
+              <RoundTripToggle checked={roundTrip} onChange={setRoundTrip} />
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col">
           {stops.map((stop, index) => (
-            <div key={stop.id} className="flex gap-2 items-start">
-              <div className="flex-1 min-w-0">
-                <AddressInput
-                  id={`stop-${index}`}
-                  label={stopLabel(index)}
-                  placeholder={
-                    index === 0
-                      ? "e.g. 1600 Pennsylvania Ave, Washington DC"
-                      : index === stops.length - 1
-                        ? "e.g. 350 Fifth Ave, New York NY"
-                        : "Address"
-                  }
-                  value={stop.value}
-                  onChange={(v) => setStop(index, v)}
-                  onPlaceSelected={(v) => setStop(index, v)}
-                />
-              </div>
-              {stops.length > MIN_STOPS &&
-                index > 0 &&
-                index < stops.length - 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeStop(index)}
-                    className="mt-7 px-3 py-2.5 rounded-lg border border-border text-text-muted hover:text-red-600 hover:border-red-300 dark:hover:border-red-700 text-sm shrink-0"
-                    aria-label={`Remove ${stopLabel(index)}`}
-                    title="Remove stop"
-                  >
-                    Remove
-                  </button>
+            <div
+              key={stop.id}
+              className="flex items-stretch gap-4"
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, index)}
+            >
+              {/* Marker column: circle vertically centered on the address input, with connector to next stop */}
+              <div className="flex w-9 shrink-0 flex-col items-center">
+                <div className="h-[2.125rem] shrink-0 w-0" aria-hidden />
+                <div
+                  className="flex shrink-0 items-center justify-center"
+                  aria-hidden
+                >
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-primary bg-transparent text-xs font-semibold text-primary">
+                    {markerLabel(index)}
+                  </div>
+                </div>
+                {index < stops.length - 1 ? (
+                  <div
+                    className="w-0.5 flex-1 -mb-[2.125rem] rounded-full bg-gradient-to-b from-primary/30 via-primary/15 to-primary/30"
+                    aria-hidden
+                  />
+                ) : (
+                  <div className="flex-1" aria-hidden />
                 )}
+              </div>
+              {/* Content: address + actions */}
+              <div className="flex min-w-0 flex-1 gap-2 pb-4">
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <AddressInput
+                    id={`stop-${index}`}
+                    label={stopLabel(index)}
+                    placeholder={
+                      index === 0
+                        ? "e.g. 1600 Pennsylvania Ave, Washington DC"
+                        : index === stops.length - 1
+                          ? "e.g. 350 Fifth Ave, New York NY"
+                          : "Address"
+                    }
+                    value={stop.value}
+                    onChange={(v) => setStop(index, v)}
+                    onPlaceSelected={(v) => setStop(index, v)}
+                  />
+                </div>
+                {stops.length > MIN_STOPS &&
+                  index > 0 &&
+                  index < stops.length - 1 && (
+                    <div className="flex shrink-0 items-center gap-0.5 pt-[2.125rem]">
+                      <button
+                        type="button"
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        className="rounded-md p-1.5 text-text-muted hover:bg-surface-alt hover:text-text cursor-grab active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-primary-light/40"
+                        aria-label={`Reorder ${stopLabel(index)}`}
+                        title="Drag to reorder"
+                      >
+                        <GripIcon className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeStop(index)}
+                        className="rounded-md p-1.5 text-text-muted hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-primary-light/40"
+                        aria-label={`Remove ${stopLabel(index)}`}
+                        title="Remove stop"
+                      >
+                        <XIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+              </div>
             </div>
           ))}
-          {stops.length < MAX_STOPS && (
+        </div>
+
+        {stops.length < MAX_STOPS && (
+          <div className="-mt-6 flex justify-end">
             <button
               type="button"
               onClick={addStop}
-              className="w-full rounded-lg border border-dashed border-border text-text-muted hover:text-text hover:border-primary-light/50 py-2.5 text-sm transition-colors"
+              className="text-sm font-medium text-text-muted hover:text-text
+                focus:outline-none focus:ring-2 focus:ring-primary-light/40 rounded-md px-0.5
+                transition-colors"
             >
               + Add stop
             </button>
-          )}
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
-          <div className="flex-1 min-w-0">
-            <YearSelector value={year} onChange={setYear} />
           </div>
-          <div className="flex items-center sm:h-[42px]">
-            <RoundTripToggle checked={roundTrip} onChange={setRoundTrip} />
-          </div>
-        </div>
+        )}
 
         {canCalculate && loading && (
-          <p className="text-sm text-text-muted flex items-center gap-2">
+          <p
+            className="text-sm text-text-muted flex items-center gap-2"
+            role="status"
+            aria-live="polite"
+          >
             <Spinner />
             Calculating...
           </p>
@@ -210,10 +320,10 @@ export function Calculator() {
         )}
 
         {result && !error && (
-          <>
+          <div className="animate-results-in space-y-5">
             <RouteMapPreview stops={trimmedStops} />
-            <Results data={result} stops={trimmedStops} />
-          </>
+            <Results data={result} stops={trimmedStops} tripDate={tripDate} />
+          </div>
         )}
       </div>
     </GoogleMapsProvider>
@@ -239,6 +349,38 @@ function useDebounce(values: string[], ms: number): string[] {
   }, [values, ms]);
 
   return debounced;
+}
+
+function GripIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M8 6h2v2H8V6zm4 0h2v2h-2V6zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2z" />
+    </svg>
+  );
+}
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  );
 }
 
 function Spinner() {

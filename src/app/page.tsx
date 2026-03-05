@@ -79,14 +79,14 @@ export default function Home() {
       <JsonLd />
       <Header />
       <main className="flex-1">
-        <div className="mx-auto max-w-xl px-4 py-8 sm:py-12">
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
           <div className="text-center mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text mb-3">
-              IRS Mileage Calculator
+              What&apos;s your drive worth?
             </h1>
             <p className="text-text-muted text-sm sm:text-base leading-relaxed max-w-md mx-auto">
-              Instantly calculate what your drive is worth, then download a PDF
-              mileage receipt for your expense report.
+              Enter your route and get the IRS reimbursement amount, then
+              download a PDF mileage receipt for your expense report.
             </p>
           </div>
           <Calculator />

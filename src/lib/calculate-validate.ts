@@ -1,4 +1,4 @@
-import type { CalculateRequest } from "@/lib/types";
+import { MAX_STOPS, type CalculateRequest } from "@/lib/types";
 import { getAvailableYears } from "@/lib/irs-rates";
 
 /**
@@ -32,10 +32,10 @@ export function validateCalculateRequest(
     if (trimmed.some((s) => s.length > 500)) {
       return { ok: false, error: "Address too long (max 500 characters)." };
     }
-    if (trimmed.length > 26) {
+    if (trimmed.length > MAX_STOPS) {
       return {
         ok: false,
-        error: "Maximum 26 stops (origin + up to 24 waypoints + destination).",
+        error: `Maximum ${MAX_STOPS} stops (origin + up to ${MAX_STOPS - 2} waypoints + destination).`,
       };
     }
     stops = trimmed;

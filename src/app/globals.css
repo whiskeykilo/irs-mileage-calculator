@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* Radius convention: cards/surfaces use rounded-xl; inputs, dropdowns, small buttons use rounded-lg. */
 @theme {
   --color-primary: #1e40af;
   --color-primary-light: #3b82f6;
@@ -9,7 +10,9 @@
   --color-border: #e2e8f0;
   --color-text: #0f172a;
   --color-text-muted: #64748b;
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* next/font Inter injects --font-inter; fallback for Tailwind utilities */
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 /* Dark theme: bluish gray, elevation hierarchy */
@@ -25,6 +28,21 @@
   --color-border: #3f3f46;
   --color-text: #fafafa;
   --color-text-muted: #a1a1aa;
+}
+
+/* Entrance: results block (map + results card) fades in to soften layout shift */
+@keyframes results-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-results-in {
+  animation: results-in 0.2s ease-out forwards;
 }
 
 html {
@@ -56,4 +74,17 @@ body {
 
 .pac-container .pac-item-query {
   font-family: var(--font-sans);
+}
+
+/* Trip date picker: ~25% smaller calendar (defaults 44/42px → 33/32px) */
+.trip-date-picker-calendar .rdp-root {
+  --rdp-day-width: 33px;
+  --rdp-day-height: 33px;
+  --rdp-day_button-width: 32px;
+  --rdp-day_button-height: 32px;
+  --rdp-nav_button-width: 28px;
+  --rdp-nav_button-height: 28px;
+  --rdp-nav-height: 32px;
+  --rdp-weekday-padding: 2px;
+  --rdp-accent-color: var(--color-primary);
 }
