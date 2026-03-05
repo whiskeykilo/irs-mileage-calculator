@@ -52,6 +52,8 @@ function initPlaces(): Promise<void> {
 
 /**
  * Lazily load map-related libraries (maps, routes, marker).
+ * Marker library is needed for AdvancedMarkerElement (replacement for deprecated
+ * google.maps.Marker). We use PinElement with glyphText only, not the deprecated glyph/element API.
  * Called by RouteMapPreview on first mount, not on initial page load.
  */
 let mapLibsPromise: Promise<void> | null = null;

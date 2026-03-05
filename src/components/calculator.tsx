@@ -73,6 +73,7 @@ export function Calculator() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculateResponse | null>(null);
+  const [resultStops, setResultStops] = useState<string[]>([]);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const draggingIndexRef = useRef<number | null>(null);
@@ -82,7 +83,8 @@ export function Calculator() {
   const trimmedStops = debouncedValues
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
-  const canCalculate = trimmedStops.length >= MIN_STOPS;
+  const allFieldsFilled = debouncedValues.every((v) => v.trim().length > 0);
+  const canCalculate = trimmedStops.length >= MIN_STOPS && allFieldsFilled;
   const stopsKey = canCalculate ? trimmedStops.join("\n") : "";
 
   const setStop = useCallback((index: number, value: string) => {
@@ -110,8 +112,6 @@ export function Calculator() {
 
   useEffect(() => {
     if (!canCalculate) {
-      setResult(null);
-      setError(null);
       return;
     }
 
@@ -132,10 +132,10 @@ export function Calculator() {
       .then(({ ok, data }) => {
         if (ok && !isApiError(data)) {
           setResult(data as CalculateResponse);
+          setResultStops(trimmedStops);
           setError(null);
         } else {
           setError(isApiError(data) ? data.error : "Something went wrong.");
-          setResult(null);
         }
       })
       .catch((err: unknown) => {
@@ -143,7 +143,6 @@ export function Calculator() {
         setError(
           "Could not reach the server. Check your internet connection and try again.",
         );
-        setResult(null);
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -337,12 +336,12 @@ export function Calculator() {
           </div>
         )}
 
-        {result && !error && (
+        {result && (
           <div className="animate-results-in space-y-5">
-            <RouteMapPreview stops={trimmedStops} />
+            <RouteMapPreview stops={resultStops} />
             <Results
               data={result}
-              stops={trimmedStops}
+              stops={resultStops}
               tripDate={tripDate}
               onTripDateChange={setTripDate}
               roundTrip={roundTrip}

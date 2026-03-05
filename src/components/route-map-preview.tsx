@@ -144,18 +144,12 @@ function toLatLng(
   return { lat, lng };
 }
 
-function addFallbackMarkers(
+type MarkerLike = { setMap: (m: unknown) => void };
+
+function collectPositions(
   legs: LegLike[] | undefined,
-  map: google.maps.Map,
-  g: typeof window.google.maps,
-  markersRef: { current: Array<{ setMap: (m: unknown) => void }> },
-) {
-  if (!legs?.length) return;
-  const Marker = g.Marker as unknown as new (opts: {
-    position: { lat: number; lng: number };
-    map: google.maps.Map;
-    label?: string;
-  }) => { setMap: (m: unknown) => void };
+): { lat: number; lng: number }[] {
+  if (!legs?.length) return [];
   const positions: { lat: number; lng: number }[] = [];
   const first = toLatLng(legs[0].startLocation);
   if (first) positions.push(first);
@@ -163,12 +157,63 @@ function addFallbackMarkers(
     const end = toLatLng(leg.endLocation);
     if (end) positions.push(end);
   }
-  const labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  return positions;
+}
+
+const WAYPOINT_LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+/**
+ * Add waypoint markers using AdvancedMarkerElement + PinElement(glyphText).
+ * Requires mapId (Cloud-based map). No deprecation warnings.
+ */
+function addAdvancedMarkers(
+  legs: LegLike[] | undefined,
+  map: google.maps.Map,
+  markerLib: {
+    AdvancedMarkerElement: new (opts: {
+      map: google.maps.Map;
+      position: { lat: number; lng: number };
+    }) => { map: google.maps.Map | null; append(child: unknown): void };
+    PinElement: new (opts: { glyphText: string }) => unknown;
+  },
+  markersRef: { current: MarkerLike[] },
+): void {
+  const positions = collectPositions(legs);
+  positions.forEach((pos, i) => {
+    const label = WAYPOINT_LABELS[i] ?? String(i + 1);
+    const pin = new markerLib.PinElement({ glyphText: label });
+    const marker = new markerLib.AdvancedMarkerElement({ map, position: pos });
+    marker.append(pin);
+    markersRef.current.push({
+      setMap(m: unknown) {
+        marker.map = (m as google.maps.Map | null) ?? null;
+      },
+    });
+  });
+}
+
+/**
+ * Fallback when no mapId: use legacy Marker (deprecated but still supported).
+ * AdvancedMarkerElement requires a Cloud map ID.
+ */
+function addLegacyMarkers(
+  legs: LegLike[] | undefined,
+  map: google.maps.Map,
+  g: typeof window.google.maps,
+  markersRef: { current: MarkerLike[] },
+): void {
+  const positions = collectPositions(legs);
+  if (positions.length === 0) return;
+  const Marker = g.Marker as unknown as new (opts: {
+    position: { lat: number; lng: number };
+    map: google.maps.Map;
+    label?: string;
+  }) => MarkerLike;
   positions.forEach((pos, i) => {
     const marker = new Marker({
       position: pos,
       map,
-      label: labels[i] ?? String(i + 1),
+      label: WAYPOINT_LABELS[i] ?? String(i + 1),
     });
     markersRef.current.push(marker);
   });
@@ -235,12 +280,20 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
       LatLngBounds?: new () => {
         extend: (p: { lat: number; lng: number }) => void;
       };
-      Marker?: new (opts: unknown) => { setMap: (m: unknown) => void };
+      Marker?: new (opts: unknown) => MarkerLike;
+      marker?: {
+        AdvancedMarkerElement: new (opts: {
+          map: google.maps.Map;
+          position: { lat: number; lng: number };
+        }) => { map: google.maps.Map | null; append(child: unknown): void };
+        PinElement: new (opts: { glyphText: string }) => unknown;
+      };
     };
     if (!g) return;
 
     const mapId =
       process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim() || undefined;
+    const markerLib = g.marker;
     let cancelled = false;
 
     void (async () => {
@@ -302,9 +355,6 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
           const routes = result.routes as
             | Array<{
                 createPolylines: () => Array<{ setMap: (m: unknown) => void }>;
-                createWaypointAdvancedMarkers?: (opts?: {
-                  map?: unknown;
-                }) => Promise<Array<{ setMap: (m: unknown) => void }>>;
                 path?: Array<{ lat: number; lng: number }>;
                 legs?: Array<{
                   startLocation?: { lat: number; lng: number };
@@ -321,29 +371,10 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
             polylinesRef.current.push(p);
           });
 
-          const addWaypointMarkers = (
-            mks: Array<{ setMap: (m: unknown) => void }>,
-          ) => {
-            if (cancelled) {
-              mks.forEach((m) => m.setMap(null));
-              return;
-            }
-            mks.forEach((marker) => {
-              marker.setMap(map);
-              markersRef.current.push(marker);
-            });
-          };
-
-          if (mapId && route.createWaypointAdvancedMarkers) {
-            route
-              .createWaypointAdvancedMarkers({ map })
-              .then(addWaypointMarkers)
-              .catch(() => {
-                if (cancelled) return;
-                addFallbackMarkers(route.legs, map, g, markersRef);
-              });
+          if (mapId && markerLib) {
+            addAdvancedMarkers(route.legs, map, markerLib, markersRef);
           } else {
-            addFallbackMarkers(route.legs, map, g, markersRef);
+            addLegacyMarkers(route.legs, map, g, markersRef);
           }
 
           if (route.path?.length && g.LatLngBounds) {
