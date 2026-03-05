@@ -21,7 +21,7 @@ export default function PrivacyPage() {
 
           <div className="space-y-6 text-sm sm:text-base leading-relaxed text-text-muted">
             <p>
-              Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+              Last updated: March 5, 2026
             </p>
 
             <section>

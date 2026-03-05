@@ -7,19 +7,26 @@ import { getRoutingProvider, RoutingProviderError } from "@/lib/routing";
 import { routeCache, buildCacheKey } from "@/lib/cache";
 import { rateLimiter, dailyApiCounter } from "@/lib/rate-limit";
 
+/** Success responses are cacheable by the browser for 5 minutes. */
+const SUCCESS_HEADERS = {
+  "Cache-Control": "private, max-age=300",
+};
+
 function getClientIp(req: NextRequest): string {
-  // Prefer x-real-ip (set by Vercel/Nginx to the actual client IP).
-  // Fall back to the rightmost x-forwarded-for entry (closest to the proxy),
-  // which is harder to spoof than the leftmost.
+  // x-real-ip is set by Vercel's edge and most reverse proxies (Nginx, etc.)
+  // to the actual client IP. Most reliable header-based source.
   const realIp = req.headers.get("x-real-ip");
   if (realIp) return realIp.trim();
 
+  // Rightmost x-forwarded-for entry is closest to the proxy, harder to spoof.
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
     const parts = forwarded.split(",").map((s) => s.trim());
     return parts[parts.length - 1];
   }
 
+  // No IP info at all. All headerless requests share one bucket, which is
+  // intentional: we'd rather rate-limit aggressively than not at all.
   return "unknown";
 }
 
@@ -73,15 +80,18 @@ export async function POST(req: NextRequest) {
       irsRate.rate,
       roundTrip,
     );
-    return NextResponse.json<CalculateResponse>({
-      distanceMiles,
-      rate: irsRate.rate,
-      rateLabel: irsRate.label,
-      reimbursement,
-      roundTrip,
-      year,
-      cached: true,
-    });
+    return NextResponse.json<CalculateResponse>(
+      {
+        distanceMiles,
+        rate: irsRate.rate,
+        rateLabel: irsRate.label,
+        reimbursement,
+        roundTrip,
+        year,
+        cached: true,
+      },
+      { headers: SUCCESS_HEADERS },
+    );
   }
 
   // 5. Check daily API cap (only for uncached requests that hit upstream)
@@ -110,15 +120,18 @@ export async function POST(req: NextRequest) {
       roundTrip,
     );
 
-    return NextResponse.json<CalculateResponse>({
-      distanceMiles,
-      rate: irsRate.rate,
-      rateLabel: irsRate.label,
-      reimbursement,
-      roundTrip,
-      year,
-      cached: false,
-    });
+    return NextResponse.json<CalculateResponse>(
+      {
+        distanceMiles,
+        rate: irsRate.rate,
+        rateLabel: irsRate.label,
+        reimbursement,
+        roundTrip,
+        year,
+        cached: false,
+      },
+      { headers: SUCCESS_HEADERS },
+    );
   } catch (err) {
     if (err instanceof RoutingProviderError) {
       const statusMap: Record<string, number> = {

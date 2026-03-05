@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { CalculateResponse } from "@/lib/types";
 import { getCurrentYear } from "@/lib/irs-rates";
 import { GoogleMapsProvider, useGoogleMaps } from "./google-maps-loader";
@@ -39,39 +39,51 @@ const DEBOUNCE_MS = 400;
 const MIN_STOPS = 2;
 const MAX_STOPS = 26;
 
+type Stop = { id: number; value: string };
+
+let nextStopId = 0;
+function makeStop(value = ""): Stop {
+  return { id: nextStopId++, value };
+}
+
 export function Calculator() {
-  const [stops, setStops] = useState<string[]>(["", ""]);
+  const [stops, setStops] = useState<Stop[]>(() => [makeStop(), makeStop()]);
   const [year, setYear] = useState(getCurrentYear());
   const [roundTrip, setRoundTrip] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculateResponse | null>(null);
 
-  const debouncedStops = useDebounce(stops, DEBOUNCE_MS);
-  const trimmedStops = debouncedStops
+  const stopValues = stops.map((s) => s.value);
+  const debouncedValues = useDebounce(stopValues, DEBOUNCE_MS);
+  const trimmedStops = debouncedValues
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
   const canCalculate = trimmedStops.length >= MIN_STOPS;
   const stopsKey = canCalculate ? trimmedStops.join("\n") : "";
 
-  const setStop = (index: number, value: string) => {
+  const setStop = useCallback((index: number, value: string) => {
     setStops((prev) => {
       const next = [...prev];
-      next[index] = value;
+      next[index] = { ...next[index], value };
       return next;
     });
-  };
+  }, []);
 
-  const addStop = () => {
-    if (stops.length >= MAX_STOPS) return;
-    setStops((prev) => [...prev.slice(0, -1), "", prev[prev.length - 1]]);
-  };
+  const addStop = useCallback(() => {
+    setStops((prev) => {
+      if (prev.length >= MAX_STOPS) return prev;
+      return [...prev.slice(0, -1), makeStop(), prev[prev.length - 1]];
+    });
+  }, []);
 
-  const removeStop = (index: number) => {
-    if (stops.length <= MIN_STOPS || index <= 0 || index >= stops.length - 1)
-      return;
-    setStops((prev) => prev.filter((_, i) => i !== index));
-  };
+  const removeStop = useCallback((index: number) => {
+    setStops((prev) => {
+      if (prev.length <= MIN_STOPS || index <= 0 || index >= prev.length - 1)
+        return prev;
+      return prev.filter((_, i) => i !== index);
+    });
+  }, []);
 
   useEffect(() => {
     if (!canCalculate) {
@@ -80,25 +92,21 @@ export function Calculator() {
       return;
     }
 
-    let cancelled = false;
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
 
     fetch("/api/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        stops: trimmedStops,
-        year,
-        roundTrip,
-      }),
+      body: JSON.stringify({ stops: trimmedStops, year, roundTrip }),
+      signal: controller.signal,
     })
       .then(async (res) => {
         const data: unknown = await res.json();
         return { ok: res.ok, data };
       })
       .then(({ ok, data }) => {
-        if (cancelled) return;
         if (ok && !isApiError(data)) {
           setResult(data as CalculateResponse);
           setError(null);
@@ -107,21 +115,18 @@ export function Calculator() {
           setResult(null);
         }
       })
-      .catch(() => {
-        if (!cancelled) {
-          setError(
-            "Could not reach the server. Check your internet connection and try again.",
-          );
-          setResult(null);
-        }
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(
+          "Could not reach the server. Check your internet connection and try again.",
+        );
+        setResult(null);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [stopsKey, year, roundTrip, canCalculate]);
 
   const stopLabel = (index: number) => {
@@ -135,11 +140,11 @@ export function Calculator() {
       <div className="space-y-5">
         <MapsLoadError />
         <div className="space-y-4">
-          {stops.map((value, index) => (
-            <div key={index} className="flex gap-2 items-start">
+          {stops.map((stop, index) => (
+            <div key={stop.id} className="flex gap-2 items-start">
               <div className="flex-1 min-w-0">
                 <AddressInput
-                  id={`stop-${index}`}
+                  id={`stop-${stop.id}`}
                   label={stopLabel(index)}
                   placeholder={
                     index === 0
@@ -148,7 +153,7 @@ export function Calculator() {
                         ? "e.g. 350 Fifth Ave, New York NY"
                         : "Address"
                   }
-                  value={value}
+                  value={stop.value}
                   onChange={(v) => setStop(index, v)}
                   onPlaceSelected={(v) => setStop(index, v)}
                 />
@@ -215,19 +220,23 @@ export function Calculator() {
   );
 }
 
-function useDebounce<T>(value: T, ms: number): T {
-  const [debounced, setDebounced] = useState(value);
-  const prevValue = useRef(value);
+/**
+ * Debounces an array of strings by joining them into a single string
+ * for value comparison (avoids reference equality issues with arrays).
+ */
+function useDebounce(values: string[], ms: number): string[] {
+  const [debounced, setDebounced] = useState(values);
+  const prevKey = useRef(values.join("\0"));
 
   useEffect(() => {
-    if (value === prevValue.current) return;
-    prevValue.current = value;
+    const key = values.join("\0");
+    if (key === prevKey.current) return;
+    prevKey.current = key;
     const t = setTimeout(() => {
-      setDebounced(value);
-      prevValue.current = value;
+      setDebounced(values);
     }, ms);
     return () => clearTimeout(t);
-  }, [value, ms]);
+  }, [values, ms]);
 
   return debounced;
 }
