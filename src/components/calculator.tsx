@@ -144,7 +144,7 @@ export function Calculator() {
             <div key={stop.id} className="flex gap-2 items-start">
               <div className="flex-1 min-w-0">
                 <AddressInput
-                  id={`stop-${stop.id}`}
+                  id={`stop-${index}`}
                   label={stopLabel(index)}
                   placeholder={
                     index === 0
