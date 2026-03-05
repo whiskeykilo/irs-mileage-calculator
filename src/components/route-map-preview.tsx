@@ -233,7 +233,7 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
       const Route = g.routes?.Route;
       if (!Route) return;
 
-      // Waypoint objects: intermediates need { location } for the Routes API.
+      // Waypoint objects: address strings use { address }; location is for latLng only.
       const request: Record<string, unknown> = {
         origin,
         destination,
@@ -242,7 +242,7 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
       };
       if (intermediates.length > 0) {
         request.intermediates = intermediates.map((addr) => ({
-          location: addr,
+          address: addr,
         }));
       }
       Route.computeRoutes(request)
