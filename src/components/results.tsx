@@ -106,10 +106,12 @@ function formatPdfGeneratedAt(): string {
 
 export function Results({ data, stops }: ResultsProps) {
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const distanceLabel = data.roundTrip ? "round trip" : "one way";
 
   const handleDownloadPdf = useCallback(async () => {
     setPdfLoading(true);
+    setPdfError(null);
     try {
       const staticMapUrl = buildStaticMapUrl(stops, data.overviewPolyline);
       const mapImageUri = staticMapUrl
@@ -130,6 +132,13 @@ export function Results({ data, stops }: ResultsProps) {
       a.download = `mileage-receipt-${new Date().toISOString().slice(0, 10)}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "PDF generation failed";
+      setPdfError(message);
+      if (process.env.NODE_ENV === "development") {
+        console.error("PDF download failed:", err);
+      }
     } finally {
       setPdfLoading(false);
     }
@@ -159,7 +168,12 @@ export function Results({ data, stops }: ResultsProps) {
           copyValue={data.reimbursement.toFixed(2)}
           detail={`${data.distanceMiles.toFixed(2)} mi × $${data.rate.toFixed(3)}/mi`}
         />
-        <div className="mt-4 pt-4 border-t border-border">
+        <div className="mt-4 pt-4 border-t border-border space-y-2">
+          {pdfError && (
+            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+              {pdfError}
+            </p>
+          )}
           <button
             type="button"
             onClick={handleDownloadPdf}

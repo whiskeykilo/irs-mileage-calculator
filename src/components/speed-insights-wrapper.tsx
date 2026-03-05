@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Component, type ReactNode } from "react";
 
+// Use /next subpath so route is set automatically for Next.js (better aggregation in dashboard).
 const SpeedInsights = dynamic(
   () => import("@vercel/speed-insights/next").then((m) => m.SpeedInsights),
   { ssr: false },

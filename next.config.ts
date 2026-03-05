@@ -6,10 +6,12 @@ import type { NextConfig } from "next";
  * 'unsafe-inline' for scripts is required because Next.js injects inline
  * scripts (JSON-LD, theme init) and we don't have middleware-based nonces.
  * Still a net win: blocks eval(), external script injection, etc.
+ * 'wasm-unsafe-eval' required for @react-pdf/renderer (client-side PDF generation).
+ * Speed Insights uses first-party intake (/_vercel/speed-insights/*), so 'self' in script-src and connect-src is sufficient.
  */
 const cspDirectives = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://maps.googleapis.com",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://maps.googleapis.com",
   "style-src 'self' 'unsafe-inline'",
   "connect-src 'self' https://maps.googleapis.com https://routes.googleapis.com https://places.googleapis.com https://*.google.com",
   "img-src 'self' data: blob: https://maps.googleapis.com https://maps.gstatic.com https://*.ggpht.com https://*.googleapis.com",
