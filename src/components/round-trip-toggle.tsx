@@ -3,19 +3,25 @@
 type RoundTripToggleProps = {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  /** Optional id for the checkbox (use when multiple toggles share state to avoid duplicate ids). */
+  id?: string;
 };
 
-export function RoundTripToggle({ checked, onChange }: RoundTripToggleProps) {
+export function RoundTripToggle({
+  checked,
+  onChange,
+  id = "round-trip",
+}: RoundTripToggleProps) {
   return (
     <label
-      htmlFor="round-trip"
+      htmlFor={id}
       className="flex items-center gap-2 cursor-pointer select-none"
     >
       <span className="text-sm font-medium text-text">Round trip</span>
       <div className="relative">
         <input
           type="checkbox"
-          id="round-trip"
+          id={id}
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
           className="sr-only peer"

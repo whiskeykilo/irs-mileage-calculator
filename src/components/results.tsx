@@ -6,6 +6,7 @@ import type { CalculateResponse } from "@/lib/types";
 import { fetchStaticMapDataUri } from "@/lib/static-map";
 import { Disclaimer } from "./disclaimer";
 import { MileageReceiptPdf } from "./mileage-receipt-pdf";
+import { RoundTripToggle } from "./round-trip-toggle";
 import { TripDatePicker } from "./trip-date-picker";
 
 type ResultsProps = {
@@ -14,6 +15,8 @@ type ResultsProps = {
   /** Required for PDF; YYYY-MM-DD. Button disabled when empty. */
   tripDate: string;
   onTripDateChange: (isoDate: string) => void;
+  roundTrip: boolean;
+  onRoundTripChange: (checked: boolean) => void;
 };
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -111,6 +114,8 @@ export function Results({
   stops,
   tripDate,
   onTripDateChange,
+  roundTrip,
+  onRoundTripChange,
 }: ResultsProps) {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
@@ -157,7 +162,14 @@ export function Results({
   return (
     <div className="space-y-4">
       <div className="bg-surface rounded-xl border border-border p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-text mb-3">Results</h2>
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <h2 className="text-base font-semibold text-text">Results</h2>
+          <RoundTripToggle
+            id="round-trip-results"
+            checked={roundTrip}
+            onChange={onRoundTripChange}
+          />
+        </div>
         <ResultRow
           label="Driving Distance"
           value={`${data.distanceMiles.toFixed(2)} miles`}

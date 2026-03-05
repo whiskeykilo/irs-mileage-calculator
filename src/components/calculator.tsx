@@ -345,6 +345,8 @@ export function Calculator() {
               stops={trimmedStops}
               tripDate={tripDate}
               onTripDateChange={setTripDate}
+              roundTrip={roundTrip}
+              onRoundTripChange={setRoundTrip}
             />
           </div>
         )}
