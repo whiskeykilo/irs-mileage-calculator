@@ -1,82 +1,34 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { useGoogleMaps } from "./google-maps-loader";
+import { useGoogleMaps, loadMapLibraries } from "./google-maps-loader";
 
 type RouteMapPreviewProps = {
   stops: string[];
 };
 
-// MapTypeStyle shape for dark map; avoid relying on google at module load
 type MapTypeStyle = {
   featureType?: string;
   elementType?: string;
   stylers: Array<{ color?: string; visibility?: string }>;
 };
 
-/** Dark map style (JSON style declarations) so the preview matches dark theme. */
 const DARK_MAP_STYLES: MapTypeStyle[] = [
-  {
-    featureType: "all",
-    elementType: "geometry",
-    stylers: [{ color: "#1d2c4d" }],
-  },
-  {
-    featureType: "all",
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#1d2c4d" }],
-  },
-  {
-    featureType: "all",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#8ec3b9" }],
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [{ color: "#0e1626" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [{ color: "#304a7d" }],
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#98a5be" }],
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#1d2c4d" }],
-  },
-  {
-    featureType: "landscape",
-    elementType: "geometry",
-    stylers: [{ color: "#1d2c4d" }],
-  },
-  {
-    featureType: "poi",
-    elementType: "geometry",
-    stylers: [{ color: "#1d2c4d" }],
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#8ec3b9" }],
-  },
-  {
-    featureType: "transit",
-    elementType: "geometry",
-    stylers: [{ color: "#1d2c4d" }],
-  },
-  {
-    featureType: "administrative",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#8ec3b9" }],
-  },
+  { featureType: "all", elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#1d2c4d" }] },
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e1626" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#304a7d" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#98a5be" }] },
+  { featureType: "road", elementType: "labels.text.stroke", stylers: [{ color: "#1d2c4d" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+  { featureType: "administrative", elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
 ];
+
+const LIGHT_MAP_STYLES: MapTypeStyle[] = [];
 
 function useIsDark(): boolean {
   const [isDark, setIsDark] = useState(() =>
@@ -152,28 +104,53 @@ function addFallbackMarkers(
 }
 
 /**
- * Small map preview showing the driving route for the given ordered stops.
- * Uses Routes API (Route.computeRoutes + createPolylines) with optional
- * intermediates. Requires "maps" and "routes" from GoogleMapsProvider.
+ * Map preview showing the driving route for the given ordered stops.
+ *
+ * Lazily loads map libraries (maps, routes, marker) on first mount instead
+ * of at page load. Theme changes update styles in-place via map.setOptions()
+ * rather than recreating the map and re-requesting the route.
  */
 export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { loaded } = useGoogleMaps();
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const polylinesRef = useRef<Array<{ setMap: (m: unknown) => void }>>([]);
+  const markersRef = useRef<Array<{ setMap: (m: unknown) => void }>>([]);
+  const { loaded: placesLoaded } = useGoogleMaps();
+  const [mapLibsReady, setMapLibsReady] = useState(false);
   const isDark = useIsDark();
 
   const [origin, ...rest] = stops;
   const destination = rest.length > 0 ? rest[rest.length - 1] : origin;
   const intermediates = rest.slice(0, -1);
+  const intermediatesKey = intermediates.join("|");
 
+  // Lazy-load map libraries on first mount
+  useEffect(() => {
+    if (!placesLoaded) return;
+    loadMapLibraries()
+      .then(() => setMapLibsReady(true))
+      .catch(() => {
+        // Map preview is non-essential; autocomplete still works
+      });
+  }, [placesLoaded]);
+
+  // Create map and render route (does NOT depend on isDark)
   useEffect(() => {
     if (
-      !loaded ||
+      !mapLibsReady ||
       !containerRef.current ||
       stops.length < 2 ||
       !origin ||
       !destination
     )
       return;
+
+    // Clean up previous map artifacts
+    polylinesRef.current.forEach((p) => p.setMap(null));
+    polylinesRef.current = [];
+    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current = [];
+    mapRef.current = null;
 
     const el = containerRef.current;
     const g = window.google?.maps as typeof window.google.maps & {
@@ -191,11 +168,10 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
 
     const mapId =
       process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim() || undefined;
-    const polylines: { setMap: (m: unknown) => void }[] = [];
-    const markersRef = { current: [] as { setMap: (m: unknown) => void }[] };
     let cancelled = false;
 
     void (async () => {
+      const isDarkNow = document.documentElement.classList.contains("dark");
       const baseOptions: google.maps.MapOptions = {
         zoom: 4,
         center: { lat: 39.5, lng: -98.5 },
@@ -218,22 +194,22 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
           mapOptions = {
             ...baseOptions,
             mapId,
-            colorScheme: isDark ? ColorScheme.DARK : ColorScheme.LIGHT,
+            colorScheme: isDarkNow ? ColorScheme.DARK : ColorScheme.LIGHT,
           };
         } else {
           mapOptions = { ...baseOptions, mapId };
         }
-      } else if (isDark) {
+      } else if (isDarkNow) {
         mapOptions = { ...baseOptions, styles: DARK_MAP_STYLES };
       }
 
       const map = new g.Map(el, mapOptions);
       if (cancelled) return;
+      mapRef.current = map;
 
       const Route = g.routes?.Route;
       if (!Route) return;
 
-      // Waypoint objects: address strings use { address }; location is for latLng only.
       const request: Record<string, unknown> = {
         origin,
         destination,
@@ -267,7 +243,7 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
           const lines = route.createPolylines();
           lines.forEach((p) => {
             p.setMap(map);
-            polylines.push(p);
+            polylinesRef.current.push(p);
           });
 
           const addWaypointMarkers = (
@@ -302,19 +278,48 @@ export function RouteMapPreview({ stops }: RouteMapPreviewProps) {
           }
         })
         .catch(() => {
-          // Route request failed (e.g. invalid address); map still shows default view
+          // Route request failed; map still shows default view
         });
     })();
 
     return () => {
       cancelled = true;
-      polylines.forEach((p) => p.setMap(null));
+      polylinesRef.current.forEach((p) => p.setMap(null));
+      polylinesRef.current = [];
       markersRef.current.forEach((m) => m.setMap(null));
       markersRef.current = [];
+      mapRef.current = null;
     };
-  }, [loaded, origin, destination, intermediates.join("|"), isDark]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapLibsReady, origin, destination, intermediatesKey]);
 
-  if (!loaded) return null;
+  // Update map theme in-place without recreating the map or route
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const mapId =
+      process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim() || undefined;
+
+    if (mapId) {
+      // Cloud-styled maps use colorScheme
+      const g = window.google?.maps;
+      void g?.importLibrary?.("core").then((core) => {
+        const ColorScheme = (
+          core as { ColorScheme?: { DARK: string; LIGHT: string } }
+        )?.ColorScheme;
+        if (ColorScheme) {
+          map.setOptions({
+            colorScheme: isDark ? ColorScheme.DARK : ColorScheme.LIGHT,
+          });
+        }
+      });
+    } else {
+      // JSON-styled maps: swap the styles array
+      map.setOptions({ styles: isDark ? DARK_MAP_STYLES : LIGHT_MAP_STYLES });
+    }
+  }, [isDark]);
+
+  if (!placesLoaded) return null;
 
   return (
     <div

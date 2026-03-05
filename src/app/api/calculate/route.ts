@@ -7,6 +7,11 @@ import { getRoutingProvider, RoutingProviderError } from "@/lib/routing";
 import { routeCache, buildCacheKey } from "@/lib/cache";
 import { rateLimiter, dailyApiCounter } from "@/lib/rate-limit";
 
+/** Success responses are cacheable by the browser for 5 minutes. */
+const SUCCESS_HEADERS = {
+  "Cache-Control": "private, max-age=300",
+};
+
 function getClientIp(req: NextRequest): string {
   // NextRequest.ip is set by Vercel's edge network to the true client IP.
   // This is the most reliable source on Vercel deployments.
@@ -78,15 +83,18 @@ export async function POST(req: NextRequest) {
       irsRate.rate,
       roundTrip,
     );
-    return NextResponse.json<CalculateResponse>({
-      distanceMiles,
-      rate: irsRate.rate,
-      rateLabel: irsRate.label,
-      reimbursement,
-      roundTrip,
-      year,
-      cached: true,
-    });
+    return NextResponse.json<CalculateResponse>(
+      {
+        distanceMiles,
+        rate: irsRate.rate,
+        rateLabel: irsRate.label,
+        reimbursement,
+        roundTrip,
+        year,
+        cached: true,
+      },
+      { headers: SUCCESS_HEADERS },
+    );
   }
 
   // 5. Check daily API cap (only for uncached requests that hit upstream)
@@ -115,15 +123,18 @@ export async function POST(req: NextRequest) {
       roundTrip,
     );
 
-    return NextResponse.json<CalculateResponse>({
-      distanceMiles,
-      rate: irsRate.rate,
-      rateLabel: irsRate.label,
-      reimbursement,
-      roundTrip,
-      year,
-      cached: false,
-    });
+    return NextResponse.json<CalculateResponse>(
+      {
+        distanceMiles,
+        rate: irsRate.rate,
+        rateLabel: irsRate.label,
+        reimbursement,
+        roundTrip,
+        year,
+        cached: false,
+      },
+      { headers: SUCCESS_HEADERS },
+    );
   } catch (err) {
     if (err instanceof RoutingProviderError) {
       const statusMap: Record<string, number> = {

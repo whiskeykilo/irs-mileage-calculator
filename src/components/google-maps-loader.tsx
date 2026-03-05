@@ -10,6 +10,7 @@ import {
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
 type MapsState = {
+  /** Places library loaded (enough for autocomplete). */
   loaded: boolean;
   error: string | null;
 };
@@ -23,25 +24,49 @@ export function useGoogleMaps() {
   return useContext(GoogleMapsContext);
 }
 
-let initPromise: Promise<void> | null = null;
+let optionsSet = false;
 
-function initGoogleMaps(): Promise<void> {
-  if (initPromise) return initPromise;
-
+function ensureOptions(): boolean {
+  if (optionsSet) return true;
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
+  if (!apiKey) return false;
+  setOptions({ key: apiKey, v: "weekly" });
+  optionsSet = true;
+  return true;
+}
+
+/**
+ * Load only the Places library on init. This is all we need for autocomplete.
+ * Maps, Routes, and Marker are loaded lazily when the map preview mounts.
+ */
+let placesPromise: Promise<void> | null = null;
+
+function initPlaces(): Promise<void> {
+  if (placesPromise) return placesPromise;
+  if (!ensureOptions()) {
     return Promise.reject(new Error("Google Maps API key not configured."));
   }
+  placesPromise = importLibrary("places").then(() => undefined);
+  return placesPromise;
+}
 
-  setOptions({ key: apiKey, v: "weekly" });
-  // A CORS error for mapsjs/gen_204 is from Google's script (logging/beacon), not our code; often caused by extensions.
-  initPromise = Promise.all([
-    importLibrary("places"),
+/**
+ * Lazily load map-related libraries (maps, routes, marker).
+ * Called by RouteMapPreview on first mount, not on initial page load.
+ */
+let mapLibsPromise: Promise<void> | null = null;
+
+export function loadMapLibraries(): Promise<void> {
+  if (mapLibsPromise) return mapLibsPromise;
+  if (!ensureOptions()) {
+    return Promise.reject(new Error("Google Maps API key not configured."));
+  }
+  mapLibsPromise = Promise.all([
     importLibrary("maps"),
     importLibrary("routes"),
     importLibrary("marker"),
   ]).then(() => undefined);
-  return initPromise;
+  return mapLibsPromise;
 }
 
 export function GoogleMapsProvider({ children }: { children: ReactNode }) {
@@ -51,7 +76,7 @@ export function GoogleMapsProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    initGoogleMaps()
+    initPlaces()
       .then(() => setState({ loaded: true, error: null }))
       .catch((err) => {
         const raw =
