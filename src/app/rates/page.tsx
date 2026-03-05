@@ -86,16 +86,16 @@ export default function RatesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-surface-alt border-b border-border">
-                  <th scope="col" className="text-left px-4 py-3 font-semibold text-text">
-                    Tax Year
+                  <th scope="col" className="text-left px-3 sm:px-4 py-3 font-semibold text-text">
+                    Year
                   </th>
-                  <th scope="col" className="text-left px-4 py-3 font-semibold text-text">
-                    Rate (per mile)
+                  <th scope="col" className="text-left px-3 sm:px-4 py-3 font-semibold text-text">
+                    Rate
                   </th>
-                  <th scope="col" className="text-left px-4 py-3 font-semibold text-text">
-                    Rate ($)
+                  <th scope="col" className="text-left px-3 sm:px-4 py-3 font-semibold text-text">
+                    $/mile
                   </th>
-                  <th scope="col" className="text-left px-4 py-3 font-semibold text-text">
+                  <th scope="col" className="text-left px-3 sm:px-4 py-3 font-semibold text-text hidden sm:table-cell">
                     Notes
                   </th>
                 </tr>
@@ -111,12 +111,12 @@ export default function RatesPage() {
                         i % 2 === 0 ? "bg-surface" : "bg-surface-alt"
                       }
                     >
-                      <td className="px-4 py-3 font-medium">{rate.year}</td>
-                      <td className="px-4 py-3">{rate.label}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-3 font-medium">{rate.year}</td>
+                      <td className="px-3 sm:px-4 py-3">{rate.label}</td>
+                      <td className="px-3 sm:px-4 py-3">
                         ${rate.rate.toFixed(3)}
                       </td>
-                      <td className="px-4 py-3 text-text-muted">
+                      <td className="px-3 sm:px-4 py-3 text-text-muted hidden sm:table-cell">
                         {rate.note ?? "Full year"}
                       </td>
                     </tr>
