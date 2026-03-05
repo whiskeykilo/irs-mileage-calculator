@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { pdf } from "@react-pdf/renderer";
 import type { CalculateResponse } from "@/lib/types";
 import { Disclaimer } from "./disclaimer";
+import { MileageReceiptPdf } from "./mileage-receipt-pdf";
 
 type ResultsProps = {
   data: CalculateResponse;
+  origin: string;
+  destination: string;
 };
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -67,8 +71,64 @@ function ResultRow({
   );
 }
 
-export function Results({ data }: ResultsProps) {
+function Spinner() {
+  return (
+    <svg
+      className="animate-spin h-4 w-4"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
+}
+
+function formatPdfGeneratedAt(): string {
+  return new Date().toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+export function Results({ data, origin, destination }: ResultsProps) {
+  const [pdfLoading, setPdfLoading] = useState(false);
   const distanceLabel = data.roundTrip ? "round trip" : "one way";
+
+  const handleDownloadPdf = useCallback(async () => {
+    setPdfLoading(true);
+    try {
+      const blob = await pdf(
+        <MileageReceiptPdf
+          origin={origin}
+          destination={destination}
+          result={data}
+          generatedAt={formatPdfGeneratedAt()}
+        />,
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `mileage-receipt-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setPdfLoading(false);
+    }
+  }, [origin, destination, data]);
 
   return (
     <div className="space-y-4">
@@ -94,6 +154,25 @@ export function Results({ data }: ResultsProps) {
           copyValue={data.reimbursement.toFixed(2)}
           detail={`${data.distanceMiles.toFixed(2)} mi × $${data.rate.toFixed(3)}/mi`}
         />
+        <div className="mt-4 pt-4 border-t border-border">
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={pdfLoading}
+            className="w-full rounded-lg border border-primary bg-white px-4 py-3 text-sm font-semibold text-primary
+              hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary-light/40
+              disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {pdfLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Spinner />
+                Generating PDF...
+              </span>
+            ) : (
+              "Download PDF receipt"
+            )}
+          </button>
+        </div>
       </div>
       <Disclaimer className="px-1" />
     </div>

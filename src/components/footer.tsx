@@ -8,7 +8,7 @@ export function Footer() {
           This calculator is for informational purposes only. Always confirm
           mileage rates and reimbursement policies with your employer and the{" "}
           <a
-            href="https://www.irs.gov/tax-professionals/standard-mileage-rates"
+            href="https://www.irs.gov"
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-primary"
@@ -17,7 +17,10 @@ export function Footer() {
           </a>
           .
         </p>
-        <nav aria-label="Footer navigation" className="flex justify-center gap-4">
+        <nav
+          aria-label="Footer navigation"
+          className="flex justify-center gap-4"
+        >
           <Link href="/rates" className="hover:text-primary transition-colors">
             Rates
           </Link>

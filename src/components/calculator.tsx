@@ -62,9 +62,7 @@ export function Calculator() {
         const data: unknown = await res.json();
 
         if (!res.ok) {
-          setError(
-            isApiError(data) ? data.error : "Something went wrong.",
-          );
+          setError(isApiError(data) ? data.error : "Something went wrong.");
           setResult(null);
         } else {
           setResult(data as CalculateResponse);
@@ -138,7 +136,9 @@ export function Calculator() {
           </div>
         )}
 
-        {result && !error && <Results data={result} />}
+        {result && !error && (
+          <Results data={result} origin={origin} destination={destination} />
+        )}
       </form>
     </GoogleMapsProvider>
   );
