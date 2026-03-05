@@ -18,7 +18,7 @@ function getEnv(key: string, fallback: number): number {
   return isNaN(val) ? fallback : val;
 }
 
-class RateLimiter {
+export class RateLimiter {
   private perIp = new Map<string, WindowEntry>();
   private cleanupCounter = 0;
 
@@ -124,7 +124,7 @@ const ALERT_THRESHOLDS = [
  * Resets at midnight UTC. Only counts actual upstream API calls (not cache hits).
  * Fires alert hooks at 50%, 80%, and 100% usage thresholds.
  */
-class DailyApiCounter {
+export class DailyApiCounter {
   private count = 0;
   private resetDate = this.todayUtc();
   private firedAlerts = new Set<number>();
