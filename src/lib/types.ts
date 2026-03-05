@@ -13,6 +13,7 @@ export type CalculateResponse = {
   roundTrip: boolean;
   year: number;
   cached: boolean;
+  overviewPolyline: string;
 };
 
 export type RouteResult = {
@@ -20,6 +21,7 @@ export type RouteResult = {
   distanceMiles: number;
   durationSeconds: number;
   summary: string;
+  overviewPolyline: string;
 };
 
 export type RoutingError = {

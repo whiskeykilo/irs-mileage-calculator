@@ -1,6 +1,13 @@
 "use client";
 
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  Image,
+  StyleSheet,
+} from "@react-pdf/renderer";
 import type { CalculateResponse } from "@/lib/types";
 
 // Use system fonts that embed without registration (Helvetica is PDF standard)
@@ -79,6 +86,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1e40af",
   },
+  mapSection: {
+    marginBottom: 20,
+  },
+  mapImage: {
+    width: "100%",
+    borderRadius: 6,
+  },
   footer: {
     position: "absolute",
     bottom: 30,
@@ -94,12 +108,14 @@ export type MileageReceiptPdfProps = {
   stops: string[];
   result: CalculateResponse;
   generatedAt: string;
+  mapImageUri?: string | null;
 };
 
 export function MileageReceiptPdf({
   stops,
   result,
   generatedAt,
+  mapImageUri,
 }: MileageReceiptPdfProps) {
   const tripType = result.roundTrip ? "Round trip" : "One way";
   const [origin, ...rest] = stops;
@@ -132,6 +148,13 @@ export function MileageReceiptPdf({
             {tripType}
           </Text>
         </View>
+
+        {mapImageUri && (
+          <View style={styles.mapSection}>
+            <Text style={styles.sectionLabel}>Route Map</Text>
+            <Image src={mapImageUri} style={styles.mapImage} />
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Calculation</Text>

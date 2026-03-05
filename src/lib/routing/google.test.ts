@@ -32,6 +32,7 @@ describe("GoogleRoutingProvider", () => {
       routes: [
         {
           summary: "I-95 N",
+          overview_polyline: { points: "abc123" },
           legs: [
             {
               distance: { value: 362_775, text: "225.4 mi" },
@@ -48,6 +49,7 @@ describe("GoogleRoutingProvider", () => {
     expect(result.distanceMiles).toBeGreaterThan(225);
     expect(result.durationSeconds).toBe(14_400);
     expect(result.summary).toBe("I-95 N");
+    expect(result.overviewPolyline).toBe("abc123");
   });
 
   it("sums distance across multiple legs", async () => {
@@ -56,6 +58,7 @@ describe("GoogleRoutingProvider", () => {
       routes: [
         {
           summary: "multi",
+          overview_polyline: { points: "xyz" },
           legs: [
             { distance: { value: 100_000, text: "" }, duration: { value: 1000, text: "" } },
             { distance: { value: 50_000, text: "" }, duration: { value: 500, text: "" } },
@@ -151,7 +154,7 @@ describe("GoogleRoutingProvider", () => {
   });
 
   it("throws PROVIDER_ERROR for empty routes array", async () => {
-    mockFetch(200, { status: "OK", routes: [{ summary: "", legs: [] }] });
+    mockFetch(200, { status: "OK", routes: [{ summary: "", overview_polyline: { points: "" }, legs: [] }] });
     const provider = new GoogleRoutingProvider();
     try {
       await provider.getRoute(["A", "B"]);
@@ -188,6 +191,7 @@ describe("GoogleRoutingProvider", () => {
       routes: [
         {
           summary: "via C",
+          overview_polyline: { points: "wp" },
           legs: [
             { distance: { value: 50000, text: "" }, duration: { value: 500, text: "" } },
             { distance: { value: 50000, text: "" }, duration: { value: 500, text: "" } },
