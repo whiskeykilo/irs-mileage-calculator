@@ -25,6 +25,7 @@ type DirectionsResponse = {
   error_message?: string;
   routes: Array<{
     summary: string;
+    overview_polyline: { points: string };
     legs: Array<{
       distance: { value: number; text: string };
       duration: { value: number; text: string };
@@ -145,6 +146,7 @@ export class GoogleRoutingProvider implements RoutingProvider {
       distanceMiles,
       durationSeconds,
       summary,
+      overviewPolyline: data.routes[0].overview_polyline?.points ?? "",
     };
   }
 }

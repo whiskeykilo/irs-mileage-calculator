@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { pdf } from "@react-pdf/renderer";
 import type { CalculateResponse } from "@/lib/types";
+import { buildStaticMapUrl, fetchStaticMapDataUri } from "@/lib/static-map";
 import { Disclaimer } from "./disclaimer";
 import { MileageReceiptPdf } from "./mileage-receipt-pdf";
 
@@ -110,11 +111,17 @@ export function Results({ data, stops }: ResultsProps) {
   const handleDownloadPdf = useCallback(async () => {
     setPdfLoading(true);
     try {
+      const staticMapUrl = buildStaticMapUrl(stops, data.overviewPolyline);
+      const mapImageUri = staticMapUrl
+        ? await fetchStaticMapDataUri(staticMapUrl)
+        : null;
+
       const blob = await pdf(
         <MileageReceiptPdf
           stops={stops}
           result={data}
           generatedAt={formatPdfGeneratedAt()}
+          mapImageUri={mapImageUri}
         />,
       ).toBlob();
       const url = URL.createObjectURL(blob);

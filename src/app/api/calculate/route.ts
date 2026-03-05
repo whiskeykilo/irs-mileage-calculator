@@ -89,6 +89,7 @@ export async function POST(req: NextRequest) {
         roundTrip,
         year,
         cached: true,
+        overviewPolyline: cached.overviewPolyline,
       },
       { headers: SUCCESS_HEADERS },
     );
@@ -129,6 +130,7 @@ export async function POST(req: NextRequest) {
         roundTrip,
         year,
         cached: false,
+        overviewPolyline: result.overviewPolyline,
       },
       { headers: SUCCESS_HEADERS },
     );
