@@ -7,12 +7,55 @@ import { Disclaimer } from "@/components/disclaimer";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Learn how the IRS Mileage Calculator works, what data it uses, and how to calculate your mileage reimbursement.",
+    "Learn how the IRS Mileage Calculator works, including mileage reimbursement estimates and PDF receipt generation for expense reports.",
 };
+
+function AboutJsonLd() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Can I generate a PDF mileage report for an expense report?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. After your route is calculated, select Download PDF receipt to export the route details, IRS rate, and reimbursement amount.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Does this use official IRS mileage rates?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. The calculator uses IRS standard business mileage rates by year.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I calculate multi-stop and round-trip routes?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Add stops in order and toggle round trip when needed before creating the PDF receipt.",
+        },
+      },
+    ],
+  };
+
+  const safeJson = JSON.stringify(structuredData).replace(/</g, "\\u003c");
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: safeJson }}
+    />
+  );
+}
 
 export default function AboutPage() {
   return (
     <>
+      <AboutJsonLd />
       <Header />
       <main className="flex-1">
         <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
@@ -30,7 +73,8 @@ export default function AboutPage() {
                 stops) and estimates the IRS mileage reimbursement amount using
                 the official IRS standard business mileage rate for your
                 selected tax year. Enter your stops in order, and the calculator
-                returns the total distance, applicable rate, and reimbursement.
+                returns the total distance, applicable rate, reimbursement, and
+                a downloadable PDF receipt for expense reporting.
               </p>
             </section>
 
@@ -56,6 +100,60 @@ export default function AboutPage() {
                   total reimbursement amount.
                 </li>
               </ol>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-semibold text-text mb-2">
+                Built for clean expense reporting
+              </h2>
+              <p>
+                Your PDF receipt includes route stops, trip type, total miles,
+                IRS rate, and reimbursement amount, ready to attach to internal
+                expense workflows.
+              </p>
+              <p className="mt-2">
+                Need historical rates too?{" "}
+                <Link href="/rates" className="underline hover:text-primary">
+                  See IRS mileage rates by year
+                </Link>
+                .
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-semibold text-text mb-2">
+                Mileage report FAQ
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-base font-medium text-text">
+                    Can I generate a PDF mileage report for an expense report?
+                  </h3>
+                  <p>
+                    Yes. After your route is calculated, select Download PDF
+                    receipt to export the route details, IRS rate, and
+                    reimbursement amount.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-base font-medium text-text">
+                    Does this use official IRS mileage rates?
+                  </h3>
+                  <p>
+                    Yes. The calculator uses IRS standard business mileage rates
+                    by year.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-base font-medium text-text">
+                    Can I calculate multi-stop and round-trip routes?
+                  </h3>
+                  <p>
+                    Yes. Add stops in order and toggle round trip when needed
+                    before creating the PDF receipt.
+                  </p>
+                </div>
+              </div>
             </section>
 
             <section>

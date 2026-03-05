@@ -2,40 +2,57 @@ import type { Metadata } from "next";
 import { SpeedInsightsWrapper } from "@/components/speed-insights-wrapper";
 import "./globals.css";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://irsmileagecalculator.com";
+
 export const metadata: Metadata = {
   title: {
-    default: "IRS Mileage Calculator - Calculate Your Mileage Reimbursement",
+    default:
+      "IRS Mileage Calculator, Instantly Calculate What Your Drive Is Worth",
     template: "%s | IRS Mileage Calculator",
   },
   description:
-    "Free IRS mileage calculator. Enter your stops (origin, destination, and optional waypoints) to calculate driving distance and mileage reimbursement using official IRS standard business mileage rates.",
+    "IRS Mileage Calculator with PDF receipt export. Instantly calculate what your drive is worth using official IRS mileage rates, then download a clean expense report PDF.",
   keywords: [
     "IRS mileage calculator",
+    "PDF mileage report",
+    "mileage expense report",
+    "mileage receipt PDF",
     "mileage reimbursement calculator",
     "IRS mileage rate",
     "standard mileage rate",
     "business mileage rate",
-    "mileage deduction calculator",
     "driving distance calculator",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "IRS Mileage Calculator",
+    title: "IRS Mileage Calculator, Instantly Know What Your Drive Is Worth",
     description:
-      "Calculate driving distance and IRS mileage reimbursement for any route with multiple stops.",
-    url: "https://irsmileagecalculator.com",
+      "Calculate distance and reimbursement, then download a PDF mileage receipt for expense reporting.",
+    url: "/",
     siteName: "IRS Mileage Calculator",
     type: "website",
+    locale: "en_US",
   },
   twitter: {
     card: "summary",
-    title: "IRS Mileage Calculator",
+    title: "IRS Mileage Calculator, Instantly Know What Your Drive Is Worth",
     description:
-      "Calculate driving distance and IRS mileage reimbursement for any route with multiple stops.",
+      "Calculate IRS mileage reimbursement and export a PDF receipt for expense reports.",
   },
-  metadataBase: new URL("https://irsmileagecalculator.com"),
+  metadataBase: new URL(BASE_URL),
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
   },
 };
 
