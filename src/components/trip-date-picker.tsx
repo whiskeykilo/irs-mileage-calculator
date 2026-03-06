@@ -101,7 +101,7 @@ export function TripDatePicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="w-full rounded-lg border border-border bg-surface text-text px-2.5 py-2 text-sm text-left
+        className="w-full rounded-lg border border-border bg-surface text-text px-2.5 py-2 text-sm text-center
           focus:outline-none focus:ring-2 focus:ring-primary-light/40 focus:border-primary-light transition-shadow
           hover:border-primary-light/50"
       >
