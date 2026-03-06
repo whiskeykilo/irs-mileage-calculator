@@ -56,4 +56,4 @@ Next.js 15 (App Router), React 19, Tailwind v4, TypeScript. Google Maps (Places 
 
 ## License
 
-MIT
+[MIT](LICENSE)
