@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { SpeedInsightsWrapper } from "@/components/speed-insights-wrapper";
 import "./globals.css";
 
 const inter = Inter({
@@ -86,7 +85,6 @@ export default function RootLayout({
         className={`${inter.className} min-h-screen flex flex-col bg-surface-alt`}
       >
         {children}
-        <SpeedInsightsWrapper />
       </body>
     </html>
   );

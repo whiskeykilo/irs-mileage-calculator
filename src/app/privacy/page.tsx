@@ -69,6 +69,22 @@ export default function PrivacyPage() {
                   .
                 </li>
                 <li>
+                  <strong className="text-text">
+                    Cloudflare Web Analytics
+                  </strong>{" "}
+                  for privacy-preserving analytics (no cookies, minimal data).
+                  See{" "}
+                  <a
+                    href="https://www.cloudflare.com/privacypolicy/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-primary"
+                  >
+                    Cloudflare&apos;s Privacy Policy
+                  </a>
+                  .
+                </li>
+                <li>
                   <strong className="text-text">Vercel</strong> for hosting. See{" "}
                   <a
                     href="https://vercel.com/legal/privacy-policy"
@@ -96,7 +112,12 @@ export default function PrivacyPage() {
               <h2 className="text-lg font-semibold text-text mb-2">
                 Analytics
               </h2>
-              <p>We do not currently use any analytics or tracking services.</p>
+              <p>
+                We use Cloudflare Web Analytics to understand usage (e.g. page
+                views and Core Web Vitals). It does not use cookies and collects
+                only minimal, aggregated data. See the Third-Party Services
+                section above for a link to Cloudflare&apos;s privacy policy.
+              </p>
             </section>
 
             <section>
