@@ -194,7 +194,8 @@ function addAdvancedMarkers(
 
 /**
  * Fallback when no mapId: use legacy Marker (deprecated but still supported).
- * AdvancedMarkerElement requires a Cloud map ID.
+ * AdvancedMarkerElement requires a Cloud map ID. Set NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
+ * to use advanced markers and silence the deprecation warning.
  */
 function addLegacyMarkers(
   legs: LegLike[] | undefined,

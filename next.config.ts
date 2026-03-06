@@ -12,7 +12,7 @@ import type { NextConfig } from "next";
 const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://maps.googleapis.com",
-  "style-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "connect-src 'self' data: https://maps.googleapis.com https://routes.googleapis.com https://places.googleapis.com https://*.google.com https://*.gstatic.com",
   "img-src 'self' data: blob: https://maps.googleapis.com https://maps.gstatic.com https://*.ggpht.com https://*.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
