@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     locale: "en_US",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "IRS Mileage Calculator - Instantly Know What Your Drive Is Worth",
     description:
       "Calculate IRS mileage reimbursement and export a PDF receipt for expense reports.",

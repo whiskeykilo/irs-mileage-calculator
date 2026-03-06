@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "IRS Mileage Calculator and PDF Mileage Receipts",
     description:
       "Calculate mileage reimbursement and export a PDF receipt for expenses.",
