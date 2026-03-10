@@ -17,6 +17,11 @@ type ResultsProps = {
   onTripDateChange: (isoDate: string) => void;
   roundTrip: boolean;
   onRoundTripChange: (checked: boolean) => void;
+  /** Current business reason input (controlled from parent). */
+  businessReason: string;
+  onBusinessReasonChange: (value: string) => void;
+  /** Sanitized business reason from server; used for PDF when present. */
+  businessReasonPdf?: string;
 };
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -116,6 +121,9 @@ export function Results({
   onTripDateChange,
   roundTrip,
   onRoundTripChange,
+  businessReason,
+  onBusinessReasonChange,
+  businessReasonPdf,
 }: ResultsProps) {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
@@ -139,6 +147,7 @@ export function Results({
           tripDate={tripDate.trim()}
           generatedAt={formatPdfGeneratedAt()}
           mapImageUri={mapImageUri}
+          businessReason={businessReasonPdf}
         />,
       ).toBlob();
       const url = URL.createObjectURL(blob);
@@ -157,7 +166,7 @@ export function Results({
     } finally {
       setPdfLoading(false);
     }
-  }, [stops, data, tripDate, canDownloadPdf]);
+  }, [stops, data, tripDate, canDownloadPdf, businessReasonPdf]);
 
   return (
     <div className="space-y-4">
@@ -194,13 +203,42 @@ export function Results({
               {pdfError}
             </p>
           )}
-          <div className="grid grid-cols-[3fr_7fr] gap-3 items-end">
-            <div className="min-w-0 w-full">
+          <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-end">
+            <div className="min-w-0">
               <TripDatePicker
                 value={tripDate}
                 onChange={onTripDateChange}
                 id="trip-date"
               />
+            </div>
+            <div className="min-w-0 flex flex-col gap-0.5">
+              <label
+                htmlFor="business-reason-results"
+                className="block text-sm font-medium text-text mb-1.5"
+              >
+                Business reason (optional)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="business-reason-results"
+                  type="text"
+                  maxLength={50}
+                  value={businessReason}
+                  onChange={(e) => onBusinessReasonChange(e.target.value)}
+                  placeholder="e.g. Client meeting"
+                  className="w-full min-w-0 rounded-lg border border-border bg-surface text-text px-3 py-2 text-sm
+                    placeholder:text-text-muted/60 focus:outline-none focus:ring-2
+                    focus:ring-primary-light/40 focus:border-primary-light transition-shadow"
+                  aria-describedby="business-reason-count-results"
+                />
+                <span
+                  id="business-reason-count-results"
+                  className="text-xs text-text-muted tabular-nums shrink-0"
+                  aria-live="polite"
+                >
+                  {businessReason.length}/50
+                </span>
+              </div>
             </div>
             <button
               type="button"

@@ -136,6 +136,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1e40af",
   },
+  businessReasonBlock: {
+    marginTop: 12,
+  },
   mapSection: {
     marginBottom: 20,
   },
@@ -165,6 +168,8 @@ export type MileageReceiptPdfProps = {
   tripDate: string;
   generatedAt: string;
   mapImageUri?: string | null;
+  /** Sanitized business reason; shown when present. */
+  businessReason?: string;
 };
 
 function formatTripDate(iso: string): string {
@@ -188,6 +193,7 @@ export function MileageReceiptPdf({
   tripDate,
   generatedAt,
   mapImageUri,
+  businessReason,
 }: MileageReceiptPdfProps) {
   const routeHeading = result.roundTrip ? "ROUND TRIP ROUTE" : "ONE WAY ROUTE";
   const isLast = (i: number) => i === stops.length - 1;
@@ -267,6 +273,12 @@ export function MileageReceiptPdf({
               ${result.reimbursement.toFixed(2)}
             </Text>
           </View>
+          {businessReason && businessReason.length > 0 && (
+            <View style={styles.businessReasonBlock}>
+              <Text style={styles.sectionLabel}>Business reason</Text>
+              <Text>{businessReason}</Text>
+            </View>
+          )}
         </View>
 
         <Text style={styles.footer}>

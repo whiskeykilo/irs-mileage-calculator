@@ -7,7 +7,6 @@ import { getAvailableYears, getCurrentYear } from "@/lib/irs-rates";
 import { GoogleMapsProvider, useGoogleMaps } from "./google-maps-loader";
 import { AddressInput } from "./address-input";
 import { RoundTripToggle } from "./round-trip-toggle";
-import { TripDatePicker } from "./trip-date-picker";
 import { Results } from "./results";
 import { RouteMapPreview } from "./route-map-preview";
 
@@ -74,12 +73,14 @@ export function Calculator() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculateResponse | null>(null);
   const [resultStops, setResultStops] = useState<string[]>([]);
+  const [businessReason, setBusinessReason] = useState("");
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const draggingIndexRef = useRef<number | null>(null);
 
   const stopValues = stops.map((s) => s.value);
   const debouncedValues = useDebounce(stopValues, DEBOUNCE_MS);
+  const debouncedBusinessReason = useDebounce([businessReason], DEBOUNCE_MS)[0];
   const trimmedStops = debouncedValues
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
@@ -119,10 +120,23 @@ export function Calculator() {
     setLoading(true);
     setError(null);
 
+    const body: {
+      stops: string[];
+      year: number;
+      roundTrip: boolean;
+      businessReason?: string;
+    } = {
+      stops: trimmedStops,
+      year,
+      roundTrip,
+    };
+    const trimmedReason = debouncedBusinessReason.trim().slice(0, 50);
+    if (trimmedReason.length > 0) body.businessReason = trimmedReason;
+
     fetch("/api/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stops: trimmedStops, year, roundTrip }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     })
       .then(async (res) => {
@@ -149,7 +163,7 @@ export function Calculator() {
       });
 
     return () => controller.abort();
-  }, [stopsKey, year, roundTrip, canCalculate]);
+  }, [stopsKey, year, roundTrip, canCalculate, debouncedBusinessReason]);
 
   const WAYPOINT_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const stopLabel = (index: number) => {
@@ -346,6 +360,9 @@ export function Calculator() {
               onTripDateChange={setTripDate}
               roundTrip={roundTrip}
               onRoundTripChange={setRoundTrip}
+              businessReason={businessReason}
+              onBusinessReasonChange={setBusinessReason}
+              businessReasonPdf={result.businessReason}
             />
           </div>
         )}

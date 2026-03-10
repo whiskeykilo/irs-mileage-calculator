@@ -1,5 +1,6 @@
 import { MAX_STOPS, type CalculateRequest } from "@/lib/types";
 import { getAvailableYears } from "@/lib/irs-rates";
+import { sanitizeBusinessReason } from "@/lib/sanitize";
 
 /**
  * Validates the request body for POST /api/calculate.
@@ -12,10 +13,8 @@ export function validateCalculateRequest(
     return { ok: false, error: "Request body must be a JSON object." };
   }
 
-  const { origin, destination, stops: stopsRaw, year, roundTrip } = body as Record<
-    string,
-    unknown
-  >;
+  const { origin, destination, stops: stopsRaw, year, roundTrip, businessReason } =
+    body as Record<string, unknown>;
 
   let stops: string[];
   if (Array.isArray(stopsRaw)) {
@@ -71,12 +70,14 @@ export function validateCalculateRequest(
     };
   }
 
+  const sanitizedReason = sanitizeBusinessReason(businessReason);
   return {
     ok: true,
     data: {
       stops,
       year: parsedYear,
       roundTrip: roundTrip === true,
+      ...(sanitizedReason.length > 0 && { businessReason: sanitizedReason }),
     },
   };
 }

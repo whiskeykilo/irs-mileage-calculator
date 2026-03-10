@@ -156,4 +156,56 @@ describe("validateCalculateRequest", () => {
     expect(r2.ok).toBe(true);
     if (r2.ok) expect(r2.data.roundTrip).toBe(false);
   });
+
+  it("accepts and sanitizes optional businessReason", () => {
+    const result = validateCalculateRequest({
+      stops: ["Start", "End"],
+      year: validYear,
+      roundTrip: false,
+      businessReason: "  Client meeting  ",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.businessReason).toBe("Client meeting");
+    }
+  });
+
+  it("omits businessReason from data when empty after sanitize", () => {
+    const result = validateCalculateRequest({
+      stops: ["Start", "End"],
+      year: validYear,
+      roundTrip: false,
+      businessReason: "   ",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.businessReason).toBeUndefined();
+    }
+  });
+
+  it("sanitizes businessReason: trims, strips control chars, caps at 50", () => {
+    const result = validateCalculateRequest({
+      stops: ["A", "B"],
+      year: validYear,
+      roundTrip: false,
+      businessReason: "  foo\u0000bar\u007F  ",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.businessReason).toBe("foobar");
+  });
+
+  it("caps businessReason at 50 characters", () => {
+    const long = "x".repeat(60);
+    const result = validateCalculateRequest({
+      stops: ["A", "B"],
+      year: validYear,
+      roundTrip: false,
+      businessReason: long,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.businessReason).toHaveLength(50);
+      expect(result.data.businessReason).toBe("x".repeat(50));
+    }
+  });
 });

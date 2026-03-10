@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
-  const { stops, year, roundTrip } = validation.data;
+  const { stops, year, roundTrip, businessReason } = validation.data;
 
   // 2. Rate limit (per-IP)
   const ip = getClientIp(req);
@@ -90,6 +90,7 @@ export async function POST(req: NextRequest) {
         year,
         cached: true,
         overviewPolyline: cached.overviewPolyline,
+        ...(businessReason !== undefined && { businessReason }),
       },
       { headers: SUCCESS_HEADERS },
     );
@@ -131,6 +132,7 @@ export async function POST(req: NextRequest) {
         year,
         cached: false,
         overviewPolyline: result.overviewPolyline,
+        ...(businessReason !== undefined && { businessReason }),
       },
       { headers: SUCCESS_HEADERS },
     );

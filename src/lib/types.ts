@@ -9,6 +9,8 @@ export type CalculateRequest = {
   stops: string[];
   year: number;
   roundTrip: boolean;
+  /** Optional; max 50 chars, sanitized on server. */
+  businessReason?: string;
 };
 
 export type CalculateResponse = {
@@ -20,6 +22,8 @@ export type CalculateResponse = {
   year: number;
   cached: boolean;
   overviewPolyline: string;
+  /** Echo of sanitized businessReason from request, if provided. */
+  businessReason?: string;
 };
 
 export type RouteResult = {
