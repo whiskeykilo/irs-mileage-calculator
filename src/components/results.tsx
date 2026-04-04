@@ -203,15 +203,15 @@ export function Results({
               {pdfError}
             </p>
           )}
-          <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-end">
-            <div className="min-w-0">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[auto_1fr_auto] md:items-end">
+            <div className="min-w-0 max-md:w-full">
               <TripDatePicker
                 value={tripDate}
                 onChange={onTripDateChange}
                 id="trip-date"
               />
             </div>
-            <div className="min-w-0 flex flex-col gap-0.5">
+            <div className="min-w-0 flex flex-col gap-0.5 max-md:w-full">
               <label
                 htmlFor="business-reason-results"
                 className="block text-sm font-medium text-text mb-1.5"
@@ -244,9 +244,10 @@ export function Results({
               type="button"
               onClick={handleDownloadPdf}
               disabled={pdfLoading || !canDownloadPdf}
-              className="min-w-0 rounded-lg border border-primary bg-surface px-4 py-2 text-sm font-semibold text-primary
+              className="min-w-0 w-full justify-self-stretch rounded-lg border border-primary bg-surface px-4 py-2 text-sm font-semibold text-primary
                 hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/40
-                disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                disabled:opacity-50 disabled:cursor-not-allowed transition-colors
+                md:w-auto md:justify-self-auto"
             >
               {pdfLoading ? (
                 <span
