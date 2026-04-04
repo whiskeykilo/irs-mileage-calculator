@@ -4,6 +4,9 @@ import { Footer } from "@/components/footer";
 import { Calculator } from "@/components/calculator";
 import { getCurrentYear, getRateForYear } from "@/lib/irs-rates";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://irsmileagecalculator.com";
+
 export const metadata: Metadata = {
   title: "IRS Mileage Calculator and PDF Mileage Receipts",
   description:
@@ -42,7 +45,7 @@ function JsonLd() {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: "IRS Mileage Calculator",
-    url: "https://irsmileagecalculator.com",
+    url: BASE_URL,
     description: `Instantly calculate what your drive is worth and download a PDF mileage receipt for expense reports. Current ${currentYear} rate: ${rateLabel}/mile.`,
     applicationCategory: "FinanceApplication",
     operatingSystem: "Any",

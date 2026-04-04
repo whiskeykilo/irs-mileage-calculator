@@ -52,7 +52,7 @@ Standard Next.js 15 app. Works on Vercel, Netlify, Railway, Docker, etc. Set env
 
 ## Stack
 
-Next.js 15 (App Router), React 19, Tailwind v4, TypeScript. Google Maps (Places + Directions). No DB, no state lib, no UI kit.
+Next.js 16 (App Router), React 19, Tailwind v4, TypeScript. Google Maps (Places + Directions). No DB, no state lib, no UI kit.
 
 ## License
 
