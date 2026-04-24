@@ -49,7 +49,15 @@ This app uses [OpenNext for Cloudflare](https://opennext.js.org/cloudflare) and 
 3. Set the same environment variables as in [`.env.example`](.env.example) in the [Cloudflare dashboard](https://developers.cloudflare.com/workers/configuration/environment-variables/) (or with `wrangler secret put` for sensitive values).
 4. `pnpm run deploy` (runs `opennextjs-cloudflare build` then `opennextjs-cloudflare deploy`).
 
-To connect this repository in the Cloudflare dashboard, use a **Workers** (or **Workers + Pages**–style) Git project and the build command `pnpm install && pnpm run build:cf` with Wrangler-based deploy, or use your own pipeline that runs `pnpm run deploy`. See the [OpenNext Cloudflare get-started guide](https://opennext.js.org/cloudflare/get-started) for details.
+**Cloudflare dashboard / Git builds (if the remote build failed):** this app is not a plain static Next export. The build step must run **OpenNext**, not only `next build`, or Wrangler will not find `.open-next/worker.js` and the job will fail.
+
+- **Package manager:** use **pnpm** with this repo’s `pnpm-lock.yaml` (for example `corepack enable pnpm` then `pnpm install --frozen-lockfile`). Do not rely on `npm install` without a lockfile; you will get a different tree.
+- **Node:** **22.x** (matches `engines` and CI). In Cloudflare, set the environment to Node 22 or add an `.nvmrc` at the repo root.
+- **Build command:** `pnpm run build:cf` (or `pnpm install --frozen-lockfile && pnpm run build:cf` if install is a separate step). A template that only runs `next build` or the generic “Next.js” preset is wrong for OpenNext.
+- **Deploy step (if separate):** `pnpm exec opennextjs-cloudflare deploy` (after a successful `build:cf`), with `CLOUDFLARE_API_TOKEN` or dashboard auth. Do not point the output directory at `.next` like a static site; the Worker entry is generated under `.open-next/`.
+- **Build-time env:** set `NEXT_PUBLIC_*` and any other vars the OpenNext/Next build needs in the Cloudflare “build environment” or variables UI so they exist when `pnpm run build:cf` runs.
+
+See the [OpenNext Cloudflare get-started guide](https://opennext.js.org/cloudflare/get-started) for the full flow.
 
 **Other hosts:** Any platform that can run a standard Next.js production build (`next build` + `next start`) with a Node server can still host the app; configure the same env vars. This repo is no longer tuned for Vercel-specific headers, but it remains portable.
 
