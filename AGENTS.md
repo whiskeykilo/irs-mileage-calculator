@@ -93,7 +93,7 @@ Single Next.js app (no monorepo, no DB, no Docker). All commands from `README.md
 
 **Services:** One service, the Next.js dev server (`pnpm dev` on port 3000).
 
-**Lint / Typecheck / Test / Build:** `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`. All four pass without Google API keys (CI does the same, see `.github/workflows/ci.yml`).
+**Lint / Typecheck / Test / Build:** `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build:cf` (OpenNext for Cloudflare; `pnpm build` is Next-only for quick checks). All pass without Google API keys (CI uses `build:cf`, see `.github/workflows/ci.yml`).
 
 **Environment:** Copy `.env.example` to `.env.local`. Google Maps API keys (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_API_KEY`) are only needed for address autocomplete and the `/api/calculate` route at runtime. Everything else (lint, typecheck, tests, build, dev server startup) works without them.
 

@@ -69,11 +69,9 @@ export default function PrivacyPage() {
                   .
                 </li>
                 <li>
-                  <strong className="text-text">
-                    Cloudflare Web Analytics
-                  </strong>{" "}
-                  for privacy-preserving analytics (no cookies, minimal data).
-                  See{" "}
+                  <strong className="text-text">Cloudflare</strong> for hosting
+                  and for privacy-preserving analytics (Cloudflare Web
+                  Analytics; no cookies, minimal data). See{" "}
                   <a
                     href="https://www.cloudflare.com/privacypolicy/"
                     target="_blank"
@@ -81,18 +79,6 @@ export default function PrivacyPage() {
                     className="underline hover:text-primary"
                   >
                     Cloudflare&apos;s Privacy Policy
-                  </a>
-                  .
-                </li>
-                <li>
-                  <strong className="text-text">Vercel</strong> for hosting. See{" "}
-                  <a
-                    href="https://vercel.com/legal/privacy-policy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-primary"
-                  >
-                    Vercel&apos;s Privacy Policy
                   </a>
                   .
                 </li>

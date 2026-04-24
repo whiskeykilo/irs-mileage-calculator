@@ -13,7 +13,7 @@ const MAX_ENTRIES = 10_000;
  * In-memory route cache with TTL and LRU eviction.
  *
  * Lives in the serverless function's memory. Entries survive for the lifetime
- * of the instance (on Vercel, that's typically a few minutes between cold starts).
+ * of the instance (a few minutes between cold starts in typical serverless setups).
  * Good enough for the MVP -- swap to Redis/KV for persistence across instances.
  */
 class RouteCache {

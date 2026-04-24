@@ -13,8 +13,11 @@ const SUCCESS_HEADERS = {
 };
 
 function getClientIp(req: NextRequest): string {
-  // x-real-ip is set by Vercel's edge and most reverse proxies (Nginx, etc.)
-  // to the actual client IP. Most reliable header-based source.
+  // Cloudflare: client IP (trusted when the request hit Cloudflare first)
+  const cfIp = req.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
+  // x-real-ip is set by some reverse proxies (Nginx, etc.) to the actual client IP
   const realIp = req.headers.get("x-real-ip");
   if (realIp) return realIp.trim();
 

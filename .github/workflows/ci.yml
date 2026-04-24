@@ -40,8 +40,8 @@ jobs:
       - name: Test
         run: pnpm test
 
-      - name: Build
-        run: pnpm build
+      - name: Build (OpenNext for Cloudflare)
+        run: pnpm build:cf
         env:
           # No secrets in CI; app works with empty Maps key (autocomplete disabled, API would need key at runtime)
           NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ""

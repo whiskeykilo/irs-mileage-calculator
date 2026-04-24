@@ -40,9 +40,18 @@ The rest of the app reads from this file.
 
 ## Deploy
 
-Standard Next.js 15 app. Works on Vercel, Netlify, Railway, Docker, etc. Set env vars in your platform; the only requirement is a Node runtime for the `/api/calculate` route.
+This app uses [OpenNext for Cloudflare](https://opennext.js.org/cloudflare) and deploys as a **Cloudflare Worker** (static assets + serverless functions), not a static export. `pnpm build` runs the stock Next.js build; **`pnpm build:cf`** is the full OpenNext build used in CI and before deploy.
 
-**Vercel:** Import repo at [vercel.com/new](https://vercel.com/new), add env vars, deploy. Or `npx vercel`.
+**Cloudflare (recommended for this repo):**
+
+1. Install the [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) (already a dev dependency).
+2. `npx wrangler login` (or set `CLOUDFLARE_API_TOKEN` for CI).
+3. Set the same environment variables as in [`.env.example`](.env.example) in the [Cloudflare dashboard](https://developers.cloudflare.com/workers/configuration/environment-variables/) (or with `wrangler secret put` for sensitive values).
+4. `pnpm run deploy` (runs `opennextjs-cloudflare build` then `opennextjs-cloudflare deploy`).
+
+To connect this repository in the Cloudflare dashboard, use a **Workers** (or **Workers + Pages**–style) Git project and the build command `pnpm install && pnpm run build:cf` with Wrangler-based deploy, or use your own pipeline that runs `pnpm run deploy`. See the [OpenNext Cloudflare get-started guide](https://opennext.js.org/cloudflare/get-started) for details.
+
+**Other hosts:** Any platform that can run a standard Next.js production build (`next build` + `next start`) with a Node server can still host the app; configure the same env vars. This repo is no longer tuned for Vercel-specific headers, but it remains portable.
 
 ## Behavior
 
