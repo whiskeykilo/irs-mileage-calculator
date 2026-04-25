@@ -4,6 +4,7 @@
   "name": "irs-mileage-calculator",
   "compatibility_date": "2026-04-24",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "preview_urls": false,
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",
