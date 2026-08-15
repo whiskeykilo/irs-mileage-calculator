@@ -41,7 +41,7 @@
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^5.2.0",
     "eslint": "^9.39.5",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.67.0",
@@ -52,7 +52,6 @@
   "pnpm": {
     "overrides": {
       "brace-expansion": "^2.1.4",
-      "undici": ">=7.29.0",
       "js-yaml": "^4.3.1",
       "postcss": ">=8.5.23",
       "esbuild": ">=0.28.1"
