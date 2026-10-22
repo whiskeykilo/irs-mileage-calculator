@@ -15,11 +15,14 @@ export interface RoutingProvider {
 /**
  * Thrown by routing providers when the upstream API returns a known error.
  * The `code` field maps to user-friendly error messages in the API route.
+ * `upstreamDetail` is the provider's raw explanation (e.g. why a key was
+ * denied). It is for server logs only and must never be sent to the client.
  */
 export class RoutingProviderError extends Error {
   constructor(
     public readonly code: RoutingError["code"],
     message: string,
+    public readonly upstreamDetail?: string,
   ) {
     super(message);
     this.name = "RoutingProviderError";

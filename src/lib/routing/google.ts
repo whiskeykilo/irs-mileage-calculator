@@ -123,6 +123,7 @@ export class GoogleRoutingProvider implements RoutingProvider {
         throw new RoutingProviderError(
           "AUTH_ERROR",
           "Routing service authentication error. Contact the site administrator.",
+          data.error_message,
         );
       default:
         throw new RoutingProviderError(
