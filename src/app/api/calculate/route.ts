@@ -148,9 +148,18 @@ export async function POST(req: NextRequest) {
         AUTH_ERROR: 502,
         PROVIDER_ERROR: 502,
       };
+      const status = statusMap[err.code] ?? 502;
+      // 5xx means our side is broken (bad key, upstream outage). Log what the
+      // provider actually said, otherwise prod just shrugs and says "502".
+      if (status >= 500) {
+        console.error(
+          `Routing provider error ${err.code}: ${err.message}`,
+          err.upstreamDetail ?? "(no upstream detail)",
+        );
+      }
       return NextResponse.json(
         { error: err.message, code: err.code },
-        { status: statusMap[err.code] ?? 502 },
+        { status },
       );
     }
 

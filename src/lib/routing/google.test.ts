@@ -119,15 +119,16 @@ describe("GoogleRoutingProvider", () => {
     }
   });
 
-  it("throws AUTH_ERROR for REQUEST_DENIED", async () => {
+  it("throws AUTH_ERROR for REQUEST_DENIED, keeping Google's reason server-side only", async () => {
     mockFetch(200, { status: "REQUEST_DENIED", error_message: "bad key" });
     const provider = new GoogleRoutingProvider();
-    try {
-      await provider.getRoute(["A", "B"]);
-    } catch (err) {
-      expect(err).toBeInstanceOf(RoutingProviderError);
-      expect((err as RoutingProviderError).code).toBe("AUTH_ERROR");
-    }
+    await expect(provider.getRoute(["A", "B"])).rejects.toMatchObject({
+      name: "RoutingProviderError",
+      code: "AUTH_ERROR",
+      message:
+        "Routing service authentication error. Contact the site administrator.",
+      upstreamDetail: "bad key",
+    });
   });
 
   it("throws PROVIDER_ERROR for UNKNOWN_ERROR", async () => {
